@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Creative Space</title>
+    <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+    <section class="hero">
+        <div class="right">
+            <h1>Creative Space ⭐️</h1>
+            <p class="subtitle">Creative Space is a free, community art hub in Zurich hosting pop‑ups, workshops and open studios. We connect local artists, spark collaboration and make creativity accessible to everyone.</p>
+        </div>
+        <div class="left">
+            <img id="art-image" src="images/art1.png" alt="Art" />
+            <div id="art-title" class="logo">art1</div>
+            <div class="socials">
+                <a href="https://instagram.com" target="_blank" rel="noopener noreferrer">Instagram</a>
+                <a href="https://telegram.org" target="_blank" rel="noopener noreferrer">Telegram</a>
+                <a href="https://www.whatsapp.com" target="_blank" rel="noopener noreferrer">WhatsApp</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Closest Next Event (split layout) -->
+    <section class="hero next-event" id="next-event-section">
+        <!-- Text on the left (yellow block) -->
+        <div class="right">
+            <h1 id="next-title">TBD</h1>
+            <p class="event-meta" id="next-date">Date: TBD</p>
+            <p class="event-meta" id="next-location">Location: TBD</p>
+            <p class="subtitle" id="next-description">TBD</p>
+        </div>
+        <!-- Image on the right (dark block) -->
+        <div class="left">
+            <img id="next-event-image" src="images/nextEvent/cover.png" alt="Next Event" />
+        </div>
+    </section>
+
+    <section class="events">
+        <h2>Upcoming Events</h2>
+        <div id="upcoming-list"></div>
+    </section>
+
+    <script src="events.js"></script>
+    <script src="script.js"></script>
+    <footer class="site-footer">
+        <div>Made with love • <a href="mailto:hello@creativespace.example">Contact us</a></div>
+    </footer>
+</body>
+</html>
