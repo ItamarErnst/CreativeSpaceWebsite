@@ -1,5 +1,5 @@
 // Events UI: render Next Event and Upcoming list, calendar links, and multi-image carousel
-// Data source: loads events exclusively from the CSV file "Creative Space Events.csv" at the repo root.
+// Data source: loads events exclusively from the CSV file at "data/creative-space-events.csv".
 (function(){
   'use strict';
 
@@ -156,10 +156,10 @@
   }
 
   async function init() {
-    // Load events from the default CSV (no fallback)
+    // Load events from the default CSV in data/ (no fallback)
     try {
       if (window.SheetsData && typeof window.SheetsData.loadEventsFromSheet === 'function') {
-        const loaded = await window.SheetsData.loadEventsFromSheet(); // defaults to "Creative Space Events.csv"
+        const loaded = await window.SheetsData.loadEventsFromSheet(); // defaults to data/creative-space-events.csv
         if (Array.isArray(loaded)) {
           window.EVENTS = loaded;
         }

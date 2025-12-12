@@ -1,6 +1,6 @@
 // CSV data loader for events (client-side, no server)
 // Exposes window.SheetsData.loadEventsFromSheet(url?) which reads a CSV file.
-// Default source (when url omitted): "Creative Space Events.csv" at repo root.
+// Default source (when url omitted): "data/creative-space-events.csv" (no spaces; mobile-safe path).
 (function(global){
   'use strict';
 
@@ -85,7 +85,7 @@
   }
 
   async function loadEventsFromSheet(url){
-    const target = (url && String(url).trim()) || 'Creative Space Events.csv';
+    const target = (url && String(url).trim()) || 'data/creative-space-events.csv';
     const res = await fetch(encodeURI(target), { cache: 'no-store' });
     if (!res.ok) throw new Error('Failed to fetch CSV');
     const text = await res.text();
