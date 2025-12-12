@@ -29,16 +29,8 @@
     google.className = 'cal-btn cal-google';
     google.title = 'Add to Google Calendar';
     google.textContent = '📅 Add to Calendar';
-
-    const ics = document.createElement('a');
-    ics.href = buildICSDataUrl(ev);
-    ics.download = (ev.name ? ev.name.replace(/[^a-z0-9\-_]+/gi,'_') : 'event') + '.ics';
-    ics.className = 'cal-btn cal-ics';
-    ics.title = 'Download ICS';
-    ics.textContent = '⬇️ ICS';
-
+    
     wrap.appendChild(google);
-    wrap.appendChild(ics);
     container.appendChild(wrap);
   }
 
