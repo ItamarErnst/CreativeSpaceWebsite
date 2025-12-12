@@ -1,4 +1,5 @@
 // Events UI: render Next Event and Upcoming list, calendar links, and multi-image carousel
+// Data source: loads events exclusively from the CSV file "Creative Space Events.csv" at the repo root.
 (function(){
   'use strict';
 
@@ -27,7 +28,7 @@
     google.rel = 'noopener noreferrer';
     google.className = 'cal-btn cal-google';
     google.title = 'Add to Google Calendar';
-    google.textContent = '📅 Add to Google';
+    google.textContent = '📅 Add to Calendar';
 
     const ics = document.createElement('a');
     ics.href = buildICSDataUrl(ev);
@@ -154,7 +155,19 @@
     }
   }
 
-  function init() {
+  async function init() {
+    // Load events from the default CSV (no fallback)
+    try {
+      if (window.SheetsData && typeof window.SheetsData.loadEventsFromSheet === 'function') {
+        const loaded = await window.SheetsData.loadEventsFromSheet(); // defaults to "Creative Space Events.csv"
+        if (Array.isArray(loaded)) {
+          window.EVENTS = loaded;
+        }
+      }
+    } catch (e) {
+      console.warn('[Events] Failed to load events from CSV. No events will be shown.', e);
+    }
+
     const { next, upcoming } = pickEvents();
     renderNextEvent(next);
     renderUpcoming(upcoming);
