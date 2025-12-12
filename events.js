@@ -19,10 +19,10 @@ window.EVENTS = [
     image: 'cover'
   },
   {
-    name: 'Holiday Makers Fair',
+    name: 'One Piece theory - session 1',
     date: '2025-12-20',
-    location: 'Creative Space, Langstrasse 11',
-    description: 'Handmade gifts market and mini-workshops.',
+    location: 'Egghead Island, pirate platz 11',
+    description: 'We will talk about the history of One Piece and how it shapes our world. Come join us for a fun and interactive session.',
     // Multi-image example for the Next Event section
     images: [
       'images/nextEvent/cover.png',
@@ -31,10 +31,10 @@ window.EVENTS = [
     ]
   },
   {
-    name: 'Winter Pop‑Up',
+    name: 'Raphis world of bugs',
     date: '2026-01-24',
     location: 'Zurich',
-    description: 'An intimate evening of live painting, music and cocoa.',
+    description: 'A talk about the history of bugs and how they shape our world.',
     image: 'cover'
   },
   {
