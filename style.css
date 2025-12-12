@@ -10,11 +10,18 @@ body {
     color: white;
 }
 
+/* Force vertical-only scrolling; prevent any horizontal overflow */
+html, body {
+    overflow-x: hidden;
+    width: 100%;
+}
+
 .hero {
     display: flex;
     flex-direction: row; /* side-by-side on desktop/tablet */
     height: auto;
     min-height: 100vh;
+    width: 100%;
 }
 
 .left {
@@ -30,6 +37,19 @@ body {
 }
 
 #art-image {
+    width: 70%;
+    max-width: 400px;
+    border-radius: 6px;
+}
+
+/* Ensure images never cause horizontal overflow */
+img {
+    max-width: 100%;
+    height: auto;
+}
+
+/* Next event image sizing (mirror hero art image) */
+#next-event-image {
     width: 70%;
     max-width: 400px;
     border-radius: 6px;
@@ -167,6 +187,10 @@ body {
         padding-bottom: 32px;
     }
     #art-image {
+        width: 85%;
+        max-width: 480px;
+    }
+    #next-event-image {
         width: 85%;
         max-width: 480px;
     }
