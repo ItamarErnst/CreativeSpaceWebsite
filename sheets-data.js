@@ -33,7 +33,8 @@
   function headerIndexMap(header){
     const map = {};
     header.forEach((h, idx)=>{
-      const key = trim(h).toLowerCase();
+      // Normalize header: trim, lowercase, strip BOM if present
+      const key = trim(h).replace(/^\uFEFF/, '').toLowerCase();
       map[key] = idx;
     });
     // Normalize common variations
@@ -86,11 +87,27 @@
 
   async function loadEventsFromSheet(url){
     const target = (url && String(url).trim()) || 'data/creative-space-events.csv';
-    const res = await fetch(encodeURI(target), { cache: 'no-store' });
-    if (!res.ok) throw new Error('Failed to fetch CSV');
+    let res;
+    try {
+      res = await fetch(encodeURI(target), { cache: 'no-store' });
+    } catch (err) {
+      console.error('[SheetsData] Network error fetching CSV', { target }, err);
+      throw err;
+    }
+    if (!res.ok) {
+      const msg = `[SheetsData] Failed to fetch CSV ${target} (status ${res.status})`;
+      console.error(msg);
+      throw new Error(msg);
+    }
     const text = await res.text();
     const rows = parseCSV(text);
-    return rowsToEvents(rows);
+    const events = rowsToEvents(rows);
+    if (!events.length) {
+      console.warn('[SheetsData] CSV parsed but no events found. Check headers (need name,date, optional image(s)/images).', { target, header: rows && rows[0] });
+    } else {
+      console.log(`[SheetsData] Loaded ${events.length} event(s) from`, target);
+    }
+    return events;
   }
 
   global.SheetsData = { loadEventsFromSheet };
