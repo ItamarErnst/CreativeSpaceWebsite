@@ -29,21 +29,7 @@
     return (v && String(v).trim()) || 'TBD';
   }
 
-  function resolveEventImage(image) {
-    const DEFAULT_IMG = 'images/nextEvent/cover.png';
-    const raw = (image == null) ? '' : String(image).trim();
-    if (!raw) return DEFAULT_IMG;
-    if (raw.includes('/') || /\.[a-z0-9]+$/i.test(raw)) return raw;
-    return `images/nextEvent/${raw}.png`;
-  }
-
-  function resolveEventImages(ev) {
-    // Support ev.images (array) or fallback to single ev.image
-    if (Array.isArray(ev && ev.images) && ev.images.length) {
-      return ev.images.map(resolveEventImage);
-    }
-    return [resolveEventImage(ev && ev.image)];
-  }
+  // removed unused image resolution helpers (moved away from per-event images)
 
   function buildGoogleCalendarUrl(ev) {
     const start = parseISODate(ev.date);
@@ -68,42 +54,13 @@
     return `https://www.google.com/calendar/render?${params.toString()}`;
   }
 
-  function buildICSDataUrl(ev) {
-    const start = parseISODate(ev.date);
-    if (!start) return '#';
-    const end = new Date(start.getTime());
-    end.setDate(end.getDate() + 1);
-    function icsDateTime(d){
-      const y = d.getFullYear();
-      const m = String(d.getMonth() + 1).padStart(2,'0');
-      const da = String(d.getDate()).padStart(2,'0');
-      return `${y}${m}${da}`; // all-day floating
-    }
-    const lines = [
-      'BEGIN:VCALENDAR',
-      'VERSION:2.0',
-      'PRODID:-//CreativeSpace//Site//EN',
-      'BEGIN:VEVENT',
-      `SUMMARY:${(ev.name||'Event').replace(/\n/g,' ')}`,
-      `DTSTART;VALUE=DATE:${icsDateTime(start)}`,
-      `DTEND;VALUE=DATE:${icsDateTime(end)}`,
-      `DESCRIPTION:${(ev.description||'').replace(/\n/g,' ')}`,
-      `LOCATION:${(ev.location||'').replace(/\n/g,' ')}`,
-      'END:VEVENT',
-      'END:VCALENDAR'
-    ];
-    const blob = lines.join('\r\n');
-    return 'data:text/calendar;charset=utf-8,' + encodeURIComponent(blob);
-  }
+  // removed unused ICS builder (we link to Google Calendar only)
 
   global.CSUtils = {
     parseISODate,
     isUpcoming,
     formatDate,
     safe,
-    resolveEventImage,
-    resolveEventImages,
-    buildGoogleCalendarUrl,
-    buildICSDataUrl
+    buildGoogleCalendarUrl
   };
 })(window);

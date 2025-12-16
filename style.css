@@ -93,17 +93,12 @@ img {
 .next-event .right { order: 1; }
 .next-event .left { order: 2; }
 
-.date {
-    font-size: 14px;
-    font-weight: bold;
-    position: absolute;
-    top: 40px;
-    right: 40px;
-}
+/* removed unused .date style */
 
 .right h1,
 .brand {
-    font-size: 192px; /* 2x from previous 96px */
+    /* Responsive scaling with max at previous size */
+    font-size: clamp(48px, 12vw, 192px);
     font-weight: 900;
     line-height: 1;
     margin-bottom: 16px;
@@ -117,6 +112,9 @@ img {
     max-width: 760px;
     margin: 0 auto;
     color: #fefee6;
+    /* prevent overflow on small screens */
+    overflow-wrap: anywhere;
+    word-break: break-word;
 }
 
 .right h1 span {
@@ -141,6 +139,7 @@ img {
     border-radius: 8px;
     overflow: hidden;
     border: 2px solid rgba(255,255,255,0.4);
+    position: relative; /* for anchored icons/arrows */
 }
 .event-header {
     display: flex;
@@ -165,6 +164,28 @@ img {
     margin-top: 14px;
     font-size: 14px;
     opacity: 0.9;
+    /* ensure long content wraps inside panel */
+    overflow-wrap: anywhere;
+    word-break: break-word;
+}
+
+/* Calendar emoji icon anchored to top-right of event panel */
+.calendar-icon {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    text-decoration: none;
+    font-size: 20px;
+    filter: drop-shadow(0 1px 0 rgba(0,0,0,0.15));
+}
+
+/* Toggle arrow styled blue and anchored bottom-right of the event panel */
+.event .toggle {
+    position: absolute;
+    bottom: 8px;
+    right: 8px;
+    color: #2596be;
+    font-size: 28px;
 }
 
 .site-footer {
@@ -189,11 +210,8 @@ img {
 @media (max-width: 768px) {
     .hero { min-height: 60vh; padding: 32px 16px; }
     .socials { margin-top: 20px; }
-    .right h1, .brand {
-        font-size: 120px; /* 2x from previous 60px */
-        line-height: 1.1;
-        margin-bottom: 18px;
-    }
+    /* titles already scale via clamp() */
+    .right h1, .brand { line-height: 1.1; margin-bottom: 18px; }
     .subtitle {
         font-size: 16px;
         line-height: 1.6;

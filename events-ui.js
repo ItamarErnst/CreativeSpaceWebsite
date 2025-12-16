@@ -3,7 +3,7 @@
 (function(){
   'use strict';
 
-  const { parseISODate, isUpcoming, formatDate, safe, resolveEventImages, buildGoogleCalendarUrl, buildICSDataUrl } = window.CSUtils || {};
+  const { parseISODate, isUpcoming, formatDate, safe, buildGoogleCalendarUrl } = window.CSUtils || {};
 
   function pickEvents() {
     const today = new Date();
@@ -15,92 +15,7 @@
     return { all: enriched };
   }
 
-  function injectCalendarButtons(container, ev) {
-    if (!container || !ev) return;
-    const wrap = document.createElement('div');
-    wrap.className = 'calendar-actions';
-
-    const google = document.createElement('a');
-    google.href = buildGoogleCalendarUrl(ev);
-    google.target = '_blank';
-    google.rel = 'noopener noreferrer';
-    google.className = 'cal-btn cal-google';
-    google.title = 'Add to Google Calendar';
-    google.textContent = '📅 Add to Calendar';
-    
-    wrap.appendChild(google);
-    container.appendChild(wrap);
-  }
-
-  function enableImageCarousel(imgEl, ev) {
-    const imgs = resolveEventImages(ev);
-    if (!imgEl || !imgs || !imgs.length) return;
-    let idx = 0;
-    function set(i){
-      idx = ((i % imgs.length) + imgs.length) % imgs.length;
-      imgEl.src = imgs[idx];
-      imgEl.alt = safe(ev.name);
-    }
-    set(0);
-
-    // auto-rotate if multiple
-    let timer = null;
-    function startAuto(){
-      if (imgs.length < 2) return;
-      stopAuto();
-      timer = setInterval(()=> set(idx+1), 4000);
-    }
-    function stopAuto(){ if (timer) { clearInterval(timer); timer = null; } }
-    startAuto();
-
-    // click to advance
-    imgEl.addEventListener('click', ()=>{ set(idx+1); startAuto(); });
-
-    // swipe support
-    let touchStartX = 0, touchStartY = 0;
-    imgEl.addEventListener('touchstart', (e)=>{
-      if (!e.touches || !e.touches.length) return;
-      touchStartX = e.touches[0].clientX;
-      touchStartY = e.touches[0].clientY;
-      stopAuto();
-    }, { passive: true });
-    imgEl.addEventListener('touchend', (e)=>{
-      const t = e.changedTouches && e.changedTouches[0];
-      if (!t) { startAuto(); return; }
-      const dx = t.clientX - touchStartX;
-      const dy = t.clientY - touchStartY;
-      if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 30) {
-        // horizontal swipe
-        set(dx < 0 ? idx+1 : idx-1);
-      }
-      startAuto();
-    });
-  }
-
-  function renderNextEvent(next) {
-    const section = document.getElementById('next-event-section');
-    if (!section) return;
-    if (!next) { section.style.display = 'none'; return; }
-
-    const titleEl = document.getElementById('next-title');
-    const dateEl = document.getElementById('next-date');
-    const descEl = document.getElementById('next-description');
-    const locEl = document.getElementById('next-location');
-    const imgEl = document.getElementById('next-event-image');
-
-    const dateText = next._dateObj ? formatDate(next._dateObj) : 'TBD';
-    if (dateEl) dateEl.textContent = `Date: ${dateText}`;
-    if (titleEl) titleEl.textContent = safe(next.name);
-    if (descEl) descEl.textContent = safe(next.description);
-    if (locEl) locEl.textContent = `Location: ${safe(next.location)}`;
-
-    // Calendar actions inside the text column
-    const rightCol = section.querySelector('.right');
-    injectCalendarButtons(rightCol, next);
-
-    // Images carousel on the left image element
-    enableImageCarousel(imgEl, next);
-  }
+  // removed: legacy next-event rendering and inline carousel helpers (unused)
 
   function renderAccordion(all) {
     const container = document.getElementById('upcoming-list');
@@ -131,24 +46,29 @@
       header.appendChild(left);
 
       const actions = document.createElement('div');
-      const calBtn = document.createElement('a');
-      calBtn.href = buildGoogleCalendarUrl(ev);
-      calBtn.target = '_blank';
-      calBtn.rel = 'noopener noreferrer';
-      calBtn.className = 'cal-btn';
-      calBtn.textContent = 'Add to Calendar';
-      actions.appendChild(calBtn);
+      header.appendChild(actions);
+
+      // Calendar emoji anchored to top-right of the event panel
+      const calIcon = document.createElement('a');
+      calIcon.href = buildGoogleCalendarUrl(ev);
+      calIcon.target = '_blank';
+      calIcon.rel = 'noopener noreferrer';
+      calIcon.className = 'calendar-icon';
+      calIcon.title = 'Add to Calendar';
+      calIcon.textContent = '📅';
+
+      // Blue arrow anchored to bottom-right of the event panel
       const toggle = document.createElement('span');
       toggle.className = 'toggle';
       toggle.textContent = idx === 0 ? '' : '▾';
-      actions.appendChild(toggle);
-      header.appendChild(actions);
 
       const body = document.createElement('div');
       body.className = 'event-body';
       body.innerHTML = `<p class="event-meta">${safe(ev.description)}</p>`;
 
       item.appendChild(header);
+      item.appendChild(calIcon);
+      item.appendChild(toggle);
       item.appendChild(body);
       container.appendChild(item);
 
@@ -156,7 +76,7 @@
         body.style.display = 'block';
       }
 
-      header.addEventListener('click', (e) => {
+      function toggleItem() {
         if (idx === 0) return; // locked open
         const isOpen = item.classList.contains('open');
         if (isOpen) {
@@ -168,6 +88,15 @@
           body.style.display = 'block';
           toggle.textContent = '▴';
         }
+      }
+
+      header.addEventListener('click', (e) => {
+        toggleItem();
+      });
+
+      toggle.addEventListener('click', (e) => {
+        e.stopPropagation();
+        toggleItem();
       });
     });
   }
