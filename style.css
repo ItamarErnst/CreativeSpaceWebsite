@@ -4,10 +4,18 @@
     box-sizing: border-box;
 }
 
+@font-face {
+    font-family: 'Mamoth';
+    src: url('Fonts/Mamoth.otf') format('opentype');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+}
+
 body {
     font-family: Arial, sans-serif;
-    background: #000;
-    color: white;
+    background: #2596be; /* mock blue */
+    color: #fff;
 }
 
 /* Force vertical-only scrolling; prevent any horizontal overflow */
@@ -18,29 +26,21 @@ html, body {
 
 .hero {
     display: flex;
-    flex-direction: row; /* side-by-side on desktop/tablet */
-    height: auto;
-    min-height: 100vh;
-    width: 100%;
-}
-
-.left {
-    width: 50%;
-    background: #0d0d0d;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
     align-items: center;
-    padding: 20px;
-    position: relative;
-    order: 1; /* image on the left for larger screens */
+    justify-content: center;
+    min-height: 80vh;
+    width: 100%;
+    padding: 40px 20px;
 }
 
-#art-image {
-    width: 70%;
-    max-width: 400px;
-    border-radius: 6px;
+.hero-inner {
+    max-width: 980px;
+    text-align: center;
 }
+
+/* removed split panel layout */
+
+/* top rotating image removed */
 
 /* Ensure images never cause horizontal overflow */
 img {
@@ -48,25 +48,20 @@ img {
     height: auto;
 }
 
-/* Next event image sizing (mirror hero art image) */
+/* Next event image sizing (kept for fallback) */
 #next-event-image {
     width: 70%;
     max-width: 400px;
     border-radius: 6px;
 }
 
-.logo {
-    margin-top: 20px;
-    font-size: 22px;
-    font-weight: bold;
-    letter-spacing: 2px;
-}
+/* removed small logo under the image */
 
 .socials {
     display: flex;
-    gap: 15px;
-    position: absolute;
-    bottom: 20px;
+    gap: 16px;
+    justify-content: center;
+    margin-top: 24px;
 }
 
 .socials a {
@@ -78,18 +73,7 @@ img {
     border-radius: 4px;
 }
 
-.right {
-    width: 50%;
-    background: #e2c64b;
-    color: black;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: flex-start;
-    padding-left: 80px;
-    position: relative;
-    order: 2; /* text on the right for larger screens */
-}
+/* removed right cream card and split layout */
 
 /* Badge label for the Next Event block */
 .next-badge {
@@ -117,17 +101,22 @@ img {
     right: 40px;
 }
 
-.right h1 {
-    font-size: 64px;
+.right h1,
+.brand {
+    font-size: 192px; /* 2x from previous 96px */
     font-weight: 900;
     line-height: 1;
-    margin-bottom: 16px; /* space before subtitle on large screens */
+    margin-bottom: 16px;
+    font-family: 'Mamoth', Arial, sans-serif;
+    color: #fefee6; /* mock cream */
 }
 
 .subtitle {
     font-size: 18px;
-    line-height: 1.5;
-    max-width: 560px;
+    line-height: 1.6;
+    max-width: 760px;
+    margin: 0 auto;
+    color: #fefee6;
 }
 
 .right h1 span {
@@ -136,8 +125,8 @@ img {
 }
 
 .events {
-    padding: 60px;
-    background: #111;
+    padding: 0 60px 60px; /* remove gap above events */
+    background: transparent;
 }
 
 .events h2 {
@@ -145,12 +134,32 @@ img {
     font-size: 32px;
 }
 
-.event {
-    margin-bottom: 12px;
-    padding: 10px;
-    background: #1d1d1d;
-    border-radius: 4px;
+.accordion .event {
+    margin-bottom: 16px;
+    background: #fefee6; /* mock cream */
+    color: #0b3a4a;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 2px solid rgba(255,255,255,0.4);
 }
+.event-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 18px;
+    cursor: pointer;
+}
+.event-header .title {
+    font-size: 22px;
+    font-weight: 800;
+}
+.event-header .meta { font-size: 14px; opacity: 0.8; }
+.event-header .toggle { font-size: 24px; line-height: 1; margin-left: 8px; }
+.event-body { padding: 0 18px 18px; display: none; }
+.event.open .event-body { display: block; }
+.event.open.locked .event-header { cursor: default; }
+.cal-btn { background: #2596be; color: #fff; border: none; padding: 8px 12px; border-radius: 8px; text-decoration: none; font-weight: 700; }
+.section-title { font-family: 'Mamoth', Arial, sans-serif; color: #fefee6; font-size: 40px; margin-bottom: 16px; }
 
 .event-meta {
     margin-top: 14px;
@@ -167,60 +176,28 @@ img {
 .site-footer a { color: #e2c64b; text-decoration: none; }
 .site-footer a:hover { text-decoration: underline; }
 
+/* Community gallery */
+.community-gallery { padding: 40px 60px 80px; }
+.gallery { position: relative; display: flex; align-items: center; justify-content: center; background: #fefee6; border-radius: 8px; padding: 20px; }
+.gallery img { max-height: 420px; border-radius: 6px; }
+.gallery .nav { position: absolute; top: 50%; transform: translateY(-50%); background: rgba(37,150,190,0.9); color: #fff; border: none; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; font-size: 22px; }
+.gallery .prev { left: 10px; }
+.gallery .next { right: 10px; }
+.gallery-title { text-align: center; margin-top: 10px; font-weight: 700; color: #fefee6; }
+
 /* Responsive adjustments */
 @media (max-width: 768px) {
-    .hero {
-        flex-direction: column; /* stack on mobile */
-        height: auto;
-        min-height: auto; /* remove tall empty space below the image */
-    }
-    .left, .right {
-        width: 100%;
-        padding: 24px;
-        align-items: center;
-    }
-    /* Ensure title appears above image on mobile */
-    .right { order: 1; padding-left: 24px; padding-right: 24px; }
-    .left { order: 2; }
-    .left {
-        padding-top: 40px;
-        padding-bottom: 32px;
-    }
-    #art-image {
-        width: 85%;
-        max-width: 480px;
-    }
-    #next-event-image {
-        width: 85%;
-        max-width: 480px;
-    }
-    .logo {
-        font-size: 18px;
-        text-align: center;
-    }
-    .socials {
-        position: static;
-        margin-top: 20px;
-    }
-    .right {
-        padding-left: 24px;
-        padding-right: 24px;
-        align-items: center;
-        text-align: center;
-        padding-top: 56px; /* extra breathing room for the title on mobile */
-        padding-bottom: 16px;
-    }
-    .right h1 {
-        font-size: 40px;
+    .hero { min-height: 60vh; padding: 32px 16px; }
+    .socials { margin-top: 20px; }
+    .right h1, .brand {
+        font-size: 120px; /* 2x from previous 60px */
         line-height: 1.1;
-        margin-bottom: 18px; /* a bit more space before the description on mobile */
+        margin-bottom: 18px;
     }
     .subtitle {
         font-size: 16px;
         line-height: 1.6;
         max-width: 640px;
     }
-    .events {
-        padding: 32px 20px;
-    }
+    .events { padding: 0 20px 32px; } /* remove gap above on mobile */
 }

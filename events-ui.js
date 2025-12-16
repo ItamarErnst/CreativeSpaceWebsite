@@ -12,9 +12,7 @@
     const enriched = source.map(e => ({ ...e, _dateObj: parseISODate(e.date) }))
       .filter(e => e._dateObj && isUpcoming(e._dateObj, today))
       .sort((a,b) => a._dateObj - b._dateObj);
-    const next = enriched[0] || null;
-    const upcoming = next ? enriched.slice(1, 7) : enriched.slice(0, 6);
-    return { next, upcoming };
+    return { all: enriched };
   }
 
   function injectCalendarButtons(container, ev) {
@@ -104,47 +102,74 @@
     enableImageCarousel(imgEl, next);
   }
 
-  function renderUpcoming(list) {
+  function renderAccordion(all) {
     const container = document.getElementById('upcoming-list');
     if (!container) return;
     container.innerHTML = '';
-    if (!list || !list.length) {
+    if (!all || !all.length) {
       const empty = document.createElement('div');
       empty.className = 'event';
-      empty.textContent = 'No additional upcoming events.';
+      empty.textContent = 'No upcoming events.';
       container.appendChild(empty);
       return;
     }
-    for (const ev of list) {
-      const div = document.createElement('div');
-      div.className = 'event';
+
+    all.forEach((ev, idx) => {
       const dateText = ev._dateObj ? formatDate(ev._dateObj) : 'TBD';
       const nameText = safe(ev.name);
       const locText = safe(ev.location);
 
-      const title = document.createElement('div');
-      title.className = 'event-title-row';
-      const strong = document.createElement('strong');
-      strong.textContent = `${dateText} — ${nameText}`;
-      title.appendChild(strong);
+      const item = document.createElement('div');
+      item.className = 'event';
+      if (idx === 0) item.classList.add('open','locked');
 
-      const cal = document.createElement('a');
-      cal.href = buildGoogleCalendarUrl(ev);
-      cal.target = '_blank';
-      cal.rel = 'noopener noreferrer';
-      cal.className = 'cal-btn cal-google';
-      cal.style.marginLeft = '8px';
-      cal.title = 'Add to Google Calendar';
-      cal.textContent = '📅';
-      title.appendChild(cal);
+      const header = document.createElement('div');
+      header.className = 'event-header';
 
-      const p = document.createElement('p');
-      p.textContent = `Location: ${locText}`;
+      const left = document.createElement('div');
+      left.innerHTML = `<div class="title">${nameText}</div><div class="meta">${dateText} • ${locText}</div>`;
+      header.appendChild(left);
 
-      div.appendChild(title);
-      div.appendChild(p);
-      container.appendChild(div);
-    }
+      const actions = document.createElement('div');
+      const calBtn = document.createElement('a');
+      calBtn.href = buildGoogleCalendarUrl(ev);
+      calBtn.target = '_blank';
+      calBtn.rel = 'noopener noreferrer';
+      calBtn.className = 'cal-btn';
+      calBtn.textContent = 'Add to Calendar';
+      actions.appendChild(calBtn);
+      const toggle = document.createElement('span');
+      toggle.className = 'toggle';
+      toggle.textContent = idx === 0 ? '' : '▾';
+      actions.appendChild(toggle);
+      header.appendChild(actions);
+
+      const body = document.createElement('div');
+      body.className = 'event-body';
+      body.innerHTML = `<p class="event-meta">${safe(ev.description)}</p>`;
+
+      item.appendChild(header);
+      item.appendChild(body);
+      container.appendChild(item);
+
+      if (idx === 0) {
+        body.style.display = 'block';
+      }
+
+      header.addEventListener('click', (e) => {
+        if (idx === 0) return; // locked open
+        const isOpen = item.classList.contains('open');
+        if (isOpen) {
+          item.classList.remove('open');
+          body.style.display = 'none';
+          toggle.textContent = '▾';
+        } else {
+          item.classList.add('open');
+          body.style.display = 'block';
+          toggle.textContent = '▴';
+        }
+      });
+    });
   }
 
   async function init() {
@@ -160,9 +185,12 @@
       console.warn('[Events] Failed to load events from CSV. No events will be shown.', e);
     }
 
-    const { next, upcoming } = pickEvents();
-    renderNextEvent(next);
-    renderUpcoming(upcoming);
+    const { all } = pickEvents();
+    // Hide separate next-event block since we use accordion now
+    const nextSection = document.getElementById('next-event-section');
+    if (nextSection) nextSection.style.display = 'none';
+    // Render accordion list
+    renderAccordion(all);
   }
 
   if (document.readyState === 'loading') {

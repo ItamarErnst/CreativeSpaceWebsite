@@ -8,13 +8,9 @@
 </head>
 <body>
     <section class="hero">
-        <div class="right">
-            <h1>BliBlaBlu️</h1>
+        <div class="hero-inner">
+            <h1 class="brand">BliBlaBlü️</h1>
             <p class="subtitle">is a free, community art hub in Zurich hosting pop‑ups, workshops and open studios. We connect local artists, spark collaboration and make creativity accessible to everyone.</p>
-        </div>
-        <div class="left">
-            <img id="art-image" src="images/art1.png" alt="Art" />
-            <div id="art-title" class="logo">art1</div>
             <div class="socials">
                 <a href="https://instagram.com" target="_blank" rel="noopener noreferrer">Instagram</a>
                 <a href="https://telegram.org" target="_blank" rel="noopener noreferrer">Telegram</a>
@@ -23,26 +19,33 @@
         </div>
     </section>
 
-    <!-- Closest Next Event (split layout) -->
+    <!-- This section will be hidden once the accordion list renders; kept for fallback -->
     <section class="hero next-event" id="next-event-section">
-        <!-- Text on the left (yellow block) -->
         <div class="right">
-            <div class="next-badge">Up comming event</div>
+            <div class="next-badge">Upcoming event</div>
             <h1 id="next-title">TBD</h1>
             <p class="event-meta" id="next-date">Date: TBD</p>
             <p class="event-meta" id="next-location">Location: TBD</p>
             <p class="subtitle" id="next-description">TBD</p>
-            <!-- Calendar button will be injected here by JS -->
         </div>
-        <!-- Image on the right (dark block) -->
         <div class="left">
             <img id="next-event-image" src="images/nextEvent/cover.png" alt="Next Event" />
         </div>
     </section>
 
     <section class="events">
-        <h2>Upcoming Events</h2>
-        <div id="upcoming-list"></div>
+        <h2 class="section-title">Upcoming Events</h2>
+        <div id="upcoming-list" class="accordion"></div>
+    </section>
+
+    <section class="community-gallery">
+        <h2 class="section-title">Community Gallery</h2>
+        <div class="gallery" id="community-gallery" data-gallery>
+            <button class="nav prev" id="gallery-prev" aria-label="Previous image">‹</button>
+            <img id="gallery-image" src="images/art1.png" alt="Gallery" />
+            <button class="nav next" id="gallery-next" aria-label="Next image">›</button>
+        </div>
+        <div id="gallery-title" class="gallery-title">art1</div>
     </section>
 
     <!-- Utilities and data loading -->
