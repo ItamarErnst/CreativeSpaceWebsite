@@ -48,12 +48,7 @@ img {
     height: auto;
 }
 
-/* Next event image sizing (kept for fallback) */
-#next-event-image {
-    width: 70%;
-    max-width: 400px;
-    border-radius: 6px;
-}
+/* removed: next-event image styles (event PNGs no longer used) */
 
 /* removed small logo under the image */
 

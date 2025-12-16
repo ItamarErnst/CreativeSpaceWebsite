@@ -37,22 +37,7 @@
       const key = trim(h).replace(/^\uFEFF/, '').toLowerCase();
       map[key] = idx;
     });
-    // Normalize common variations
-    if (Object.prototype.hasOwnProperty.call(map, 'image(s)')) {
-      // Treat `image(s)` as `images`
-      map['images'] = map['image(s)'];
-    }
-    if (Object.prototype.hasOwnProperty.call(map, 'imgs')) {
-      map['images'] = map['imgs'];
-    }
     return map;
-  }
-
-  function splitImages(val){
-    const raw = trim(val);
-    if (!raw) return [];
-    // support comma or pipe separated
-    return raw.split(/[|,]/).map(s=>trim(s)).filter(Boolean);
   }
 
   function rowsToEvents(rows){
@@ -69,17 +54,12 @@
       if (!trim(name) || !trim(date)) continue;
       const location = row[idx['location'] ?? -1];
       const description = row[idx['description'] ?? -1];
-      const image = row[idx['image'] ?? -1];
-      const imagesCell = row[idx['images'] ?? -1];
       const ev = {
         name: trim(name),
         date: trim(date),
         location: trim(location),
         description: trim(description)
       };
-      const imgs = splitImages(imagesCell);
-      if (imgs.length) ev.images = imgs;
-      else if (trim(image)) ev.image = trim(image);
       events.push(ev);
     }
     return events;
@@ -103,7 +83,7 @@
     const rows = parseCSV(text);
     const events = rowsToEvents(rows);
     if (!events.length) {
-      console.warn('[SheetsData] CSV parsed but no events found. Check headers (need name,date, optional image(s)/images).', { target, header: rows && rows[0] });
+      console.warn('[SheetsData] CSV parsed but no events found. Check headers (need name,date,location,description).', { target, header: rows && rows[0] });
     } else {
       console.log(`[SheetsData] Loaded ${events.length} event(s) from`, target);
     }

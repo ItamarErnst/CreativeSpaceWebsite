@@ -142,15 +142,6 @@ function pickEvents() {
   return { next, upcoming };
 }
 
-function resolveEventImage(image) {
-  const DEFAULT_IMG = 'images/nextEvent/cover.png';
-  const raw = (image == null) ? '' : String(image).trim();
-  if (!raw) return DEFAULT_IMG;
-  // If path already includes a slash or an extension, use as-is
-  if (raw.includes('/') || /\.[a-z0-9]+$/i.test(raw)) return raw;
-  // Otherwise, treat as a bare name in images/nextEvent/ and assume .png
-  return `images/nextEvent/${raw}.png`;
-}
 
 function renderNextEvent(next) {
   const section = document.getElementById('next-event-section');
@@ -164,7 +155,6 @@ function renderNextEvent(next) {
   const dateEl = document.getElementById('next-date');
   const descEl = document.getElementById('next-description');
   const locEl = document.getElementById('next-location');
-  const imgEl = document.getElementById('next-event-image');
 
   const dateText = next._dateObj ? formatDate(next._dateObj) : 'TBD';
   const locationText = safe(next.location);
@@ -172,11 +162,6 @@ function renderNextEvent(next) {
   if (titleEl) titleEl.textContent = safe(next.name);
   if (descEl) descEl.textContent = safe(next.description);
   if (locEl) locEl.textContent = `Location: ${locationText}`;
-  if (imgEl) {
-    const src = resolveEventImage(next.image);
-    imgEl.src = src;
-    imgEl.alt = safe(next.name);
-  }
 }
 
 function renderUpcoming(list) {
