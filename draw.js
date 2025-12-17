@@ -8,7 +8,10 @@
   function resizeCanvasToDisplaySize() {
     const dpr = window.devicePixelRatio || 1;
     const rect = canvas.getBoundingClientRect();
-    const displaySize = Math.min(rect.width, rect.height);
+    // Some mobile browsers may report zero height briefly while aspect-ratio settles
+    const measuredWidth = rect.width || canvas.clientWidth || 300;
+    const measuredHeight = rect.height || measuredWidth; // square by CSS
+    const displaySize = Math.min(measuredWidth, measuredHeight);
     const target = Math.max(200, Math.min(420, Math.floor(displaySize)));
     const nextWidth = Math.round(target * dpr);
     const nextHeight = Math.round(target * dpr);

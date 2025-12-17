@@ -52,20 +52,25 @@ html, body {
     border: 3px solid rgba(255,255,255,0.9);
     border-radius: 8px;
     touch-action: none; /* allow custom touch drawing */
-    width: 80vmin;  /* responsive square */
-    max-width: 420px;
-    max-height: 420px;
-    aspect-ratio: 1 / 1;
+    display: block; /* avoid inline baseline gaps */
+    width: min(92vw, 380px); /* friendlier size on phones, great on desktop */
+    max-width: 420px; /* keep desktop cap */
+    aspect-ratio: 1 / 1; /* stay square */
+    margin: 0 auto; /* center if container is wider */
 }
 
 .draw-caption {
     font-weight: 700;
     color: #fefee6;
+    text-align: center;
 }
 
 .draw-actions {
     display: flex;
     gap: 10px;
+    justify-content: center; /* center buttons under canvas */
+    align-items: center;
+    flex-wrap: wrap; /* wrap nicely on very small screens */
 }
 
 .draw-status {
@@ -74,6 +79,14 @@ html, body {
     font-size: 14px;
     line-height: 1.2;
     font-weight: 700;
+    text-align: center;
+}
+
+/* Tighter horizontal page padding for Events on very small screens */
+@media (max-width: 520px) {
+  .events {
+    padding: 0 16px 40px;
+  }
 }
 
 .draw-done {
