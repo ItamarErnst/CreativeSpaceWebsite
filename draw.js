@@ -69,6 +69,8 @@
     last = getPoint(e);
     // Remove status when starting to draw again
     setStatus('');
+    // Also remove the optional alternate mail button when drawing resumes
+    try { removeOtherMailButton(); } catch (_) {}
   }
 
   function move(e) {
@@ -99,7 +101,8 @@
 
   // DONE button behavior
   const doneBtn = document.getElementById('draw-done');
-  // We open the user's default mail app via mailto: (no Gmail forcing)
+  // We will open Gmail compose in a new tab by default, with an optional
+  // fallback button to open the system default mail client via mailto.
   function clearCanvas() {
     // Explicitly clear and repaint regardless of size change
     const dpr = window.devicePixelRatio || 1;
@@ -110,7 +113,7 @@
     ctx.fillRect(0, 0, canvas.width / dpr, canvas.height / dpr);
   }
 
-  // Email composition helpers (used for mailto links)
+  // Email composition helpers
   const EMAIL_TO = 'bliblablu.art@gmail.com';
   const EMAIL_SUBJECT = 'New drawing from BliBlaBlu website';
   const EMAIL_BODY_TEXT = [
@@ -142,12 +145,57 @@
     const a = document.createElement('a');
     a.href = href;
     a.style.display = 'none';
+    // Try opening in a new tab/window if browser allows; many will hand off to app
+    a.target = '_blank';
+    a.rel = 'noopener noreferrer';
     document.body.appendChild(a);
     a.click();
     // Cleanup
     setTimeout(() => {
       if (a && a.parentNode) a.parentNode.removeChild(a);
     }, 0);
+  }
+
+  function openGmailCompose(bodyText) {
+    const params = new URLSearchParams({
+      view: 'cm',
+      to: EMAIL_TO,
+      su: EMAIL_SUBJECT,
+      body: bodyText
+    });
+    const gmailUrl = `https://mail.google.com/mail/?${params.toString()}`;
+    window.open(gmailUrl, '_blank', 'noopener,noreferrer');
+  }
+
+  // Container where we may inject the "Open Other mail instead" button
+  const drawArea = document.getElementById('draw-area');
+  let otherMailBtn = null;
+
+  function ensureOtherMailButton() {
+    if (otherMailBtn) return otherMailBtn;
+    otherMailBtn = document.createElement('button');
+    otherMailBtn.type = 'button';
+    otherMailBtn.textContent = 'Open Other mail instead';
+    otherMailBtn.className = 'draw-clear'; // reuse secondary button style
+    otherMailBtn.style.marginTop = '8px';
+    otherMailBtn.addEventListener('click', () => {
+      openShortMailto(EMAIL_BODY_TEXT);
+    });
+    // Place it under the status line if possible
+    const status = document.getElementById('draw-status');
+    if (status && status.parentNode) {
+      status.parentNode.insertBefore(otherMailBtn, status.nextSibling);
+    } else if (drawArea) {
+      drawArea.appendChild(otherMailBtn);
+    }
+    return otherMailBtn;
+  }
+
+  function removeOtherMailButton() {
+    if (otherMailBtn && otherMailBtn.parentNode) {
+      otherMailBtn.parentNode.removeChild(otherMailBtn);
+    }
+    otherMailBtn = null;
   }
 
   if (doneBtn) {
@@ -167,10 +215,17 @@
         }
 
         // Update status only when copy truly succeeded
-        setStatus(copied ? 'Drawing copied to clipboard' : '');
+        if (copied) {
+          setStatus('Drawing copied to clipboard');
+        } else {
+          setStatus('');
+        }
 
-        // Open default mail client with the appropriate body
-        openShortMailto(copied ? EMAIL_BODY_TEXT : EMAIL_BODY_SCREENSHOT);
+        // Open Gmail compose in a new tab by default
+        openGmailCompose(copied ? EMAIL_BODY_TEXT : EMAIL_BODY_SCREENSHOT);
+
+        // After opening Gmail, show an optional button to use the default mail app instead
+        ensureOtherMailButton();
       } catch (err) {
         console.error('Failed to prepare the drawing', err);
         alert('Sorry, could not prepare the drawing to send.');
@@ -185,8 +240,10 @@
       clearCanvas();
       // Remove status when clearing
       setStatus('');
+      removeOtherMailButton();
     });
   }
 
-  // No Gmail forcing; we use the system's default mail handler via mailto
+  // By default we open Gmail compose in a new tab on DONE; an optional
+  // "Open Other mail instead" button lets users use their default mail app via mailto.
 })();
