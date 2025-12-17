@@ -257,12 +257,26 @@ img {
 .accordion .event.from-right { transform: translateX(24px); }
 .accordion .event.in-view { opacity: 1; transform: translateX(0); }
 
+/* Re-entry animations (element already visible: animate transform only) */
+@keyframes slideFromLeft { from { transform: translateX(-24px); } to { transform: translateX(0); } }
+@keyframes slideFromRight { from { transform: translateX(24px); } to { transform: translateX(0); } }
+.accordion .event.reenter-left {
+    animation: slideFromLeft 520ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.accordion .event.reenter-right {
+    animation: slideFromRight 520ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
 /* Respect reduced motion preferences */
 @media (prefers-reduced-motion: reduce) {
   .subtitle,
   .socials a,
   .accordion .event {
     transition: none !important;
+  }
+  .accordion .event.reenter-left,
+  .accordion .event.reenter-right {
+    animation: none !important;
   }
 }
 .event-header {

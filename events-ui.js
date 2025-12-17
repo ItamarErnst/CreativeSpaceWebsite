@@ -5,7 +5,7 @@
 
   const { parseISODate, isUpcoming, formatDate, safe, buildGoogleCalendarUrl } = window.CSUtils || {};
 
-  // Track scroll direction (kept for potential future use, but animations are reveal-once now)
+  // Track scroll direction
   let lastScrollY = window.scrollY || 0;
   let scrollingDown = true;
   window.addEventListener('scroll', () => {
@@ -117,36 +117,47 @@
     const items = Array.from(document.querySelectorAll('#upcoming-list .event'));
     if (!items.length) return;
     const prefersReduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
+    
+    // Observer that reveals on enter and hides when scrolled past the bottom while scrolling down
     const observer = new IntersectionObserver((entries) => {
+      const vh = (observer.root && observer.root.clientHeight) || window.innerHeight || 0;
       entries.forEach(entry => {
         const el = entry.target;
-        if (!entry.isIntersecting) return; // Only act on enter
+        const idx = items.indexOf(el);
+        const delayMs = prefersReduced ? 0 : Math.min(120 * idx, 420); // slightly more stagger than before
 
-        // Reveal only once: if already animated, stop observing
-        if (el.dataset.animated === '1') {
-          observer.unobserve(el);
+        if (entry.isIntersecting) {
+          // Element entered viewport
+          // If we are scrolling down, reveal from left with stagger
+          if (scrollingDown) {
+            el.classList.remove('from-right');
+            el.classList.add('from-left');
+            el.style.transitionDelay = `${delayMs}ms`;
+            el.classList.add('in-view');
+          } else {
+            // Scrolling up: keep it visible (do not reverse or hide)
+            el.style.transitionDelay = '0ms';
+            el.classList.add('in-view');
+          }
           return;
         }
 
-        // Use a consistent direction to avoid visual reversal
-        el.classList.remove('from-left', 'from-right');
-        el.classList.add('from-left');
-
-        // Stagger by index in DOM order
-        const idx = items.indexOf(el);
-        const delayMs = prefersReduced ? 0 : Math.min(80 * idx, 320);
-        el.style.transitionDelay = `${delayMs}ms`;
-        el.classList.add('in-view');
-        el.dataset.animated = '1';
-
-        // Stop observing after first reveal to prevent disappearing/reversing
-        observer.unobserve(el);
+        // Not intersecting: decide whether to hide
+        const top = entry.boundingClientRect.top;
+        // If leaving towards the bottom of the screen while scrolling down, hide so it can slide again next time
+        if (scrollingDown && top >= vh) {
+          el.classList.remove('in-view');
+          // Reset starting pose for next reveal
+          el.classList.remove('from-right');
+          el.classList.add('from-left');
+          el.style.transitionDelay = '0ms';
+        }
+        // If leaving towards the top while scrolling up, do nothing — keep state so when user scrolls up it stays active
       });
-    }, { root: null, rootMargin: '0px', threshold: 0.1 });
+    }, { root: null, rootMargin: '0px', threshold: 0.12 });
 
     items.forEach(el => {
-      // initialize off-screen position
+      // initialize off-screen position so first reveal slides from left
       el.classList.add('from-left');
       observer.observe(el);
     });

@@ -74,15 +74,21 @@
       // Subtitle fade-in
       const subtitle = document.querySelector('.subtitle');
       if (subtitle) {
-        // next frame to ensure transition applies
-        requestAnimationFrame(() => subtitle.classList.add('is-visible'));
+        // Add more delay before subtitle appears
+        const baseDelay = prefersReduced ? 0 : 800;
+        setTimeout(() => {
+          subtitle.classList.add('is-visible');
+        }, baseDelay);
       }
 
       // Social links staggered reveal
       const links = Array.from(document.querySelectorAll('.socials a'));
       if (links.length) {
+        // Increase base delay and per-item stagger for a slower cascade
+        const base = prefersReduced ? 0 : 900;
+        const step = prefersReduced ? 0 : 220;
         links.forEach((a, i) => {
-          const delay = prefersReduced ? 0 : 120 * i;
+          const delay = base + step * i;
           setTimeout(() => a.classList.add('is-visible'), delay);
         });
       }
