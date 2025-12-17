@@ -109,19 +109,24 @@
     ctx.fillRect(0, 0, canvas.width / dpr, canvas.height / dpr);
   }
 
-  function openShortMailto() {
-    const subject = encodeURIComponent('New drawing from BliBlaBlu website');
-    const msg = [
-      'A visitor drew something for you on BliBlaBlu.',
-      '',
-      'The image has been copied to your clipboard.',
-      'Please paste it into this email (Ctrl/Cmd + V) and send.',
-      '',
-      'Thank you!'
-    ].join('\n');
-    const body = encodeURIComponent(msg);
-    const href = `mailto:bliblablu.art@gmail.com?subject=${subject}&body=${body}`;
-    window.location.href = href;
+  // Email composition helpers (shared between mailto and Gmail link)
+  const EMAIL_TO = 'bliblablu.art@gmail.com';
+  const EMAIL_SUBJECT = 'New drawing from BliBlaBlu website';
+  const EMAIL_BODY_TEXT = [
+    'A visitor drew something for you on BliBlaBlu.',
+    '',
+    'The image has been copied to your clipboard.',
+    'Please paste it into this email (Ctrl/Cmd + V) and send.',
+    '',
+    'Please include a title for your creation and your name so we can credit you in our gallery.',
+    '',
+    'Thank you!'
+  ].join('\n');
+
+  function openGmailCompose() {
+    const gmailUrl = `https://mail.google.com/mail/?view=cm&to=${encodeURIComponent(EMAIL_TO)}&su=${encodeURIComponent(EMAIL_SUBJECT)}&body=${encodeURIComponent(EMAIL_BODY_TEXT)}`;
+    // Open Gmail compose in a new tab as requested
+    window.open(gmailUrl, '_blank', 'noopener,noreferrer');
   }
 
   if (doneBtn) {
@@ -149,8 +154,8 @@
         // Show confirmation below buttons
         setStatus('Drawing copied to clipboard');
 
-        // Open short mailto (no huge data in URL)
-        openShortMailto();
+        // Open Gmail compose by default
+        openGmailCompose();
       } catch (err) {
         console.error('Failed to prepare the drawing', err);
         alert('Sorry, could not prepare the drawing to send.');
@@ -167,4 +172,6 @@
       setStatus('');
     });
   }
+
+  // Removed optional Gmail link setup; we now open Gmail by default on DONE
 })();
