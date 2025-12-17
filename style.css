@@ -38,6 +38,72 @@ html, body {
     text-align: center;
 }
 
+/* Drawing area */
+.draw-area {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 18px;
+}
+
+#draw-canvas {
+    background: #fefee6; /* light background to draw on */
+    border: 3px solid rgba(255,255,255,0.9);
+    border-radius: 8px;
+    touch-action: none; /* allow custom touch drawing */
+    width: 80vmin;  /* responsive square */
+    max-width: 420px;
+    max-height: 420px;
+    aspect-ratio: 1 / 1;
+}
+
+.draw-caption {
+    font-weight: 700;
+    color: #fefee6;
+}
+
+.draw-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.draw-status {
+    min-height: 1.2em; /* reserve space to avoid layout shift */
+    color: #fefee6;
+    font-size: 14px;
+    line-height: 1.2;
+    font-weight: 700;
+}
+
+.draw-done {
+    background: #e2c64b;
+    color: #0b3a4a;
+    border: none;
+    padding: 10px 16px;
+    border-radius: 8px;
+    font-weight: 800;
+    cursor: pointer;
+}
+
+.draw-done:hover {
+    filter: brightness(1.05);
+}
+
+.draw-clear {
+    background: transparent;
+    color: #fefee6;
+    border: 2px solid rgba(255,255,255,0.85);
+    padding: 10px 16px;
+    border-radius: 8px;
+    font-weight: 800;
+    cursor: pointer;
+}
+
+.draw-clear:hover {
+    background: rgba(255,255,255,0.1);
+}
+
 /* removed split panel layout */
 
 /* top rotating image removed */

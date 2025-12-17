@@ -19,9 +19,22 @@
         </div>
     </section>
 
+    <!-- Order requested: Title (above), then Events, then Drawing, then Gallery -->
     <section class="events">
         <h2 class="section-title">Upcoming Events</h2>
         <div id="upcoming-list" class="accordion"></div>
+    </section>
+
+    <section>
+        <div class="draw-area" id="draw-area">
+            <canvas id="draw-canvas" width="400" height="400" aria-label="Drawing canvas"></canvas>
+            <div class="draw-caption">Draw something for us</div>
+            <div class="draw-actions">
+                <button id="draw-done" class="draw-done" type="button">DONE</button>
+                <button id="draw-clear" class="draw-clear" type="button">Clear</button>
+            </div>
+            <div id="draw-status" class="draw-status" aria-live="polite"></div>
+        </div>
     </section>
 
     <section class="community-gallery">
@@ -35,6 +48,7 @@
     </section>
 
     <!-- Utilities and data loading -->
+    <script src="draw.js"></script>
     <script src="utils.js"></script>
     <!-- CSV loader (reads from "data/creative-space-events.csv") -->
     <script src="sheets-data.js"></script>
