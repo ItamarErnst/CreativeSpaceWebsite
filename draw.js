@@ -16,23 +16,45 @@
     const nextWidth = Math.round(target * dpr);
     const nextHeight = Math.round(target * dpr);
 
-    // If the backing store size changed, update it
-    if (canvas.width !== nextWidth || canvas.height !== nextHeight) {
+    // Snapshot current content BEFORE resizing (resizing clears the bitmap)
+    let snapshotUrl = null;
+    const hadBitmap = canvas.width > 0 && canvas.height > 0;
+    if (hadBitmap) {
+      try { snapshotUrl = canvas.toDataURL('image/png'); } catch (_) { snapshotUrl = null; }
+    }
+
+    const sizeChanged = (canvas.width !== nextWidth || canvas.height !== nextHeight);
+    if (sizeChanged) {
       canvas.width = nextWidth;
       canvas.height = nextHeight;
     }
 
-    // Always reset transform before applying DPR scale to avoid compounding
+    // Reset transform before applying DPR scale to avoid compounding
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
-    // Repaint background in CSS pixel units
-    ctx.fillStyle = '#fefee6';
-    ctx.fillRect(0, 0, nextWidth / dpr, nextHeight / dpr);
+    // If we resized and had previous content, redraw it scaled to the new size
+    if (sizeChanged && snapshotUrl) {
+      const img = new Image();
+      img.onload = () => {
+        // draw scaled to CSS pixel size
+        ctx.drawImage(img, 0, 0, img.width / dpr, img.height / dpr, 0, 0, nextWidth / dpr, nextHeight / dpr);
+      };
+      img.src = snapshotUrl;
+    }
+    // Do NOT repaint the background here; only on explicit clear or initial paint.
   }
 
   // Initial setup
   resizeCanvasToDisplaySize();
+  // Perform an initial paint of the background once
+  (function initialPaint(){
+    const dpr = window.devicePixelRatio || 1;
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.fillStyle = '#fefee6';
+    ctx.fillRect(0, 0, canvas.width / dpr, canvas.height / dpr);
+  })();
   window.addEventListener('resize', resizeCanvasToDisplaySize);
 
   // Drawing state
@@ -71,6 +93,7 @@
     setStatus('');
     // Also remove the optional alternate mail button when drawing resumes
     try { removeOtherMailButton(); } catch (_) {}
+    try { removeMobileMailButton(); } catch (_) {}
   }
 
   function move(e) {
@@ -170,6 +193,7 @@
   // Container where we may inject the "Open Other mail instead" button
   const drawArea = document.getElementById('draw-area');
   let otherMailBtn = null;
+  let mobileMailBtn = null;
 
   function ensureOtherMailButton() {
     if (otherMailBtn) return otherMailBtn;
@@ -196,6 +220,32 @@
       otherMailBtn.parentNode.removeChild(otherMailBtn);
     }
     otherMailBtn = null;
+  }
+
+  function ensureMobileMailButton(bodyText) {
+    if (mobileMailBtn) return mobileMailBtn;
+    mobileMailBtn = document.createElement('button');
+    mobileMailBtn.type = 'button';
+    mobileMailBtn.textContent = 'Open mail';
+    mobileMailBtn.className = 'draw-done';
+    mobileMailBtn.style.marginTop = '8px';
+    mobileMailBtn.addEventListener('click', () => {
+      openShortMailto(bodyText || EMAIL_BODY_SCREENSHOT);
+    });
+    const status = document.getElementById('draw-status');
+    if (status && status.parentNode) {
+      status.parentNode.insertBefore(mobileMailBtn, status.nextSibling);
+    } else if (drawArea) {
+      drawArea.appendChild(mobileMailBtn);
+    }
+    return mobileMailBtn;
+  }
+
+  function removeMobileMailButton() {
+    if (mobileMailBtn && mobileMailBtn.parentNode) {
+      mobileMailBtn.parentNode.removeChild(mobileMailBtn);
+    }
+    mobileMailBtn = null;
   }
 
   if (doneBtn) {
@@ -226,6 +276,8 @@
         if (isMobile) {
           // Show a temporary mobile-only hint
           setStatus('ScreenShot to complete');
+          // Show an explicit "Open mail" button below the message
+          ensureMobileMailButton(EMAIL_BODY_SCREENSHOT);
           // Give the user a short moment to take a screenshot before opening mail
           setTimeout(() => {
             openShortMailto(EMAIL_BODY_SCREENSHOT);
@@ -251,6 +303,7 @@
       // Remove status when clearing
       setStatus('');
       removeOtherMailButton();
+      removeMobileMailButton();
     });
   }
 
