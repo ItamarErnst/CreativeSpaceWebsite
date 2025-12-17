@@ -221,11 +221,21 @@
           setStatus('');
         }
 
-        // Open Gmail compose in a new tab by default
-        openGmailCompose(copied ? EMAIL_BODY_TEXT : EMAIL_BODY_SCREENSHOT);
-
-        // After opening Gmail, show an optional button to use the default mail app instead
-        ensureOtherMailButton();
+        // Decide behavior based on device: on mobile, prompt to screenshot and open default mail app
+        const isMobile = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent || '');
+        if (isMobile) {
+          // Show a temporary mobile-only hint
+          setStatus('ScreenShot to complete');
+          // Give the user a short moment to take a screenshot before opening mail
+          setTimeout(() => {
+            openShortMailto(EMAIL_BODY_SCREENSHOT);
+          }, 1200);
+        } else {
+          // Desktop: open Gmail compose in a new tab by default
+          openGmailCompose(copied ? EMAIL_BODY_TEXT : EMAIL_BODY_SCREENSHOT);
+          // After opening Gmail, show an optional button to use the default mail app instead
+          ensureOtherMailButton();
+        }
       } catch (err) {
         console.error('Failed to prepare the drawing', err);
         alert('Sorry, could not prepare the drawing to send.');
