@@ -5,6 +5,15 @@
 
   const { parseISODate, isUpcoming, formatDate, safe, buildGoogleCalendarUrl } = window.CSUtils || {};
 
+  // Track scroll direction (kept for potential future use, but animations are reveal-once now)
+  let lastScrollY = window.scrollY || 0;
+  let scrollingDown = true;
+  window.addEventListener('scroll', () => {
+    const y = window.scrollY || 0;
+    scrollingDown = y >= lastScrollY;
+    lastScrollY = y;
+  }, { passive: true });
+
   function pickEvents() {
     const today = new Date();
     today.setHours(0,0,0,0);
@@ -98,6 +107,48 @@
         e.stopPropagation();
         toggleItem();
       });
+    });
+
+    // After rendering, hook up intersection-based animations
+    setupEventAnimations();
+  }
+
+  function setupEventAnimations() {
+    const items = Array.from(document.querySelectorAll('#upcoming-list .event'));
+    if (!items.length) return;
+    const prefersReduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        const el = entry.target;
+        if (!entry.isIntersecting) return; // Only act on enter
+
+        // Reveal only once: if already animated, stop observing
+        if (el.dataset.animated === '1') {
+          observer.unobserve(el);
+          return;
+        }
+
+        // Use a consistent direction to avoid visual reversal
+        el.classList.remove('from-left', 'from-right');
+        el.classList.add('from-left');
+
+        // Stagger by index in DOM order
+        const idx = items.indexOf(el);
+        const delayMs = prefersReduced ? 0 : Math.min(80 * idx, 320);
+        el.style.transitionDelay = `${delayMs}ms`;
+        el.classList.add('in-view');
+        el.dataset.animated = '1';
+
+        // Stop observing after first reveal to prevent disappearing/reversing
+        observer.unobserve(el);
+      });
+    }, { root: null, rootMargin: '0px', threshold: 0.1 });
+
+    items.forEach(el => {
+      // initialize off-screen position
+      el.classList.add('from-left');
+      observer.observe(el);
     });
   }
 

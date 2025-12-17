@@ -63,4 +63,71 @@
     safe,
     buildGoogleCalendarUrl
   };
+
+  // -----------------------------
+  // Motion: load animations & parallax
+  // -----------------------------
+  function initLoadAnimations() {
+    try {
+      const prefersReduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+      // Subtitle fade-in
+      const subtitle = document.querySelector('.subtitle');
+      if (subtitle) {
+        // next frame to ensure transition applies
+        requestAnimationFrame(() => subtitle.classList.add('is-visible'));
+      }
+
+      // Social links staggered reveal
+      const links = Array.from(document.querySelectorAll('.socials a'));
+      if (links.length) {
+        links.forEach((a, i) => {
+          const delay = prefersReduced ? 0 : 120 * i;
+          setTimeout(() => a.classList.add('is-visible'), delay);
+        });
+      }
+
+      // Background parallax pattern (very subtle)
+      if (!prefersReduced) initParallaxBackground();
+    } catch (e) {
+      // avoid breaking the page if any of these fail
+      console.warn('[Motion] initLoadAnimations failed', e);
+    }
+  }
+
+  function initParallaxBackground() {
+    let ticking = false;
+    let lastY = window.scrollY || 0;
+
+    function update() {
+      ticking = false;
+      const y = lastY;
+      // Move background positions at different, slow rates
+      const x1 = (y * 0.03).toFixed(2);
+      const y1 = (y * 0.06).toFixed(2);
+      const x2 = (y * -0.02).toFixed(2);
+      const y2 = (y * 0.04).toFixed(2);
+      document.body.style.backgroundPosition = `${x1}px ${y1}px, ${x2}px ${y2}px`;
+    }
+
+    window.addEventListener('scroll', () => {
+      lastY = window.scrollY || 0;
+      if (!ticking) {
+        ticking = true;
+        requestAnimationFrame(update);
+      }
+    }, { passive: true });
+
+    // initial position
+    requestAnimationFrame(() => {
+      lastY = window.scrollY || 0;
+      update();
+    });
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initLoadAnimations);
+  } else {
+    initLoadAnimations();
+  }
 })(window);

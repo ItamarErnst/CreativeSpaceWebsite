@@ -99,96 +99,7 @@
 
   // DONE button behavior
   const doneBtn = document.getElementById('draw-done');
-  const statusPanelId = 'draw-fallback-panel';
-  function ensureFallbackPanel() {
-    let panel = document.getElementById(statusPanelId);
-    if (panel) return panel;
-    const container = document.getElementById('draw-area') || canvas.parentElement;
-    panel = document.createElement('div');
-    panel.id = statusPanelId;
-    panel.style.maxWidth = '520px';
-    panel.style.margin = '6px auto 0';
-    panel.style.padding = '8px 10px';
-    panel.style.border = '2px solid rgba(255,255,255,0.5)';
-    panel.style.borderRadius = '8px';
-    panel.style.background = 'rgba(255,255,255,0.08)';
-    panel.style.color = '#fefee6';
-    panel.style.fontSize = '14px';
-    panel.style.display = 'none';
-
-    const msg = document.createElement('div');
-    msg.id = statusPanelId + '-msg';
-    msg.style.textAlign = 'center';
-    msg.style.marginBottom = '6px';
-    panel.appendChild(msg);
-
-    const ta = document.createElement('textarea');
-    ta.id = statusPanelId + '-ta';
-    ta.readOnly = true;
-    ta.style.width = '100%';
-    ta.style.height = '80px';
-    ta.style.borderRadius = '6px';
-    ta.style.border = '1px solid rgba(255,255,255,0.4)';
-    ta.style.background = 'rgba(255,255,255,0.12)';
-    ta.style.color = '#fefee6';
-    ta.style.padding = '6px';
-    ta.style.fontFamily = 'monospace';
-    ta.style.fontSize = '12px';
-    ta.style.resize = 'vertical';
-    panel.appendChild(ta);
-
-    const row = document.createElement('div');
-    row.style.display = 'flex';
-    row.style.gap = '8px';
-    row.style.justifyContent = 'center';
-    row.style.marginTop = '6px';
-
-    const copyBtn = document.createElement('button');
-    copyBtn.textContent = 'Copy now';
-    copyBtn.style.background = '#e2c64b';
-    copyBtn.style.color = '#0b3a4a';
-    copyBtn.style.border = 'none';
-    copyBtn.style.padding = '8px 12px';
-    copyBtn.style.borderRadius = '8px';
-    copyBtn.style.fontWeight = '800';
-    copyBtn.style.cursor = 'pointer';
-    copyBtn.addEventListener('click', async () => {
-      try {
-        ta.select();
-        ta.setSelectionRange(0, 999999);
-        const ok = document.execCommand('copy');
-        setStatus(ok ? 'Drawing link copied. Paste it in Gmail.' : 'Select the text and copy it.');
-      } catch (_) {
-        setStatus('Select the text and copy it.');
-      }
-    });
-    row.appendChild(copyBtn);
-
-    panel.appendChild(row);
-    container.appendChild(panel);
-    return panel;
-  }
-
-  function showManualCopyPanel(dataUrl, reason) {
-    const panel = ensureFallbackPanel();
-    const msg = document.getElementById(statusPanelId + '-msg');
-    const ta = document.getElementById(statusPanelId + '-ta');
-    if (msg) {
-      const insecure = (location.protocol !== 'https:' && location.hostname !== 'localhost');
-      msg.textContent = reason || (insecure
-        ? 'Copy is blocked on insecure connections. Use the button below.'
-        : 'Copy didn\'t work on this device. Use the button below.');
-    }
-    if (ta) {
-      ta.value = dataUrl;
-    }
-    panel.style.display = 'block';
-  }
-
-  function hideManualCopyPanel() {
-    const panel = document.getElementById(statusPanelId);
-    if (panel) panel.style.display = 'none';
-  }
+  // Removed manual copy fallback panel for mobile: we will just open Gmail
   function clearCanvas() {
     // Explicitly clear and repaint regardless of size change
     const dpr = window.devicePixelRatio || 1;
@@ -213,8 +124,20 @@
     'Thank you!'
   ].join('\n');
 
-  function openGmailCompose() {
-    const gmailUrl = `https://mail.google.com/mail/?view=cm&to=${encodeURIComponent(EMAIL_TO)}&su=${encodeURIComponent(EMAIL_SUBJECT)}&body=${encodeURIComponent(EMAIL_BODY_TEXT)}`;
+  // Alternate body for devices where copying fails: ask for a screenshot instead
+  const EMAIL_BODY_SCREENSHOT = [
+    'A visitor drew something for you on BliBlaBlu.',
+    '',
+    'On this device the drawing could not be copied automatically.',
+    'Please take a screenshot of your drawing and attach it to this email, then send it.',
+    '',
+    'Please include a title for your creation and your name so we can credit you in our gallery.',
+    '',
+    'Thank you!'
+  ].join('\n');
+
+  function openGmailCompose(bodyText) {
+    const gmailUrl = `https://mail.google.com/mail/?view=cm&to=${encodeURIComponent(EMAIL_TO)}&su=${encodeURIComponent(EMAIL_SUBJECT)}&body=${encodeURIComponent(bodyText)}`;
     // Open Gmail compose in a new tab as requested
     window.open(gmailUrl, '_blank', 'noopener,noreferrer');
   }
@@ -222,9 +145,8 @@
   if (doneBtn) {
     doneBtn.addEventListener('click', async () => {
       try {
-        // Prefer copying the actual PNG image to clipboard
+        // Try copying the actual PNG image to clipboard (best case)
         let copied = false;
-        hideManualCopyPanel();
         try {
           const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
           if (blob && window.ClipboardItem && navigator.clipboard && navigator.clipboard.write) {
@@ -233,32 +155,14 @@
             copied = true;
           }
         } catch (_) {
-          // ignore and fallback to text
+          // ignore; we will fall back to opening Gmail with screenshot instructions
         }
 
-        if (!copied) {
-          // Fallback: copy Data URL as text
-          const dataUrl = canvas.toDataURL('image/png');
-          try {
-            if (navigator.clipboard && navigator.clipboard.writeText) {
-              await navigator.clipboard.writeText(dataUrl);
-              copied = true;
-            }
-          } catch (err) {
-            // As a last resort on mobile (notably iOS Safari), show manual copy UI
-            showManualCopyPanel(dataUrl, 'Could not access clipboard on this device.');
-          }
-          if (!copied && /(iPad|iPhone|iPod)/i.test(navigator.userAgent)) {
-            // iOS often blocks programmatic copy; show manual UI explicitly
-            showManualCopyPanel(dataUrl);
-          }
-        }
+        // Update status only when copy truly succeeded
+        setStatus(copied ? 'Drawing copied to clipboard' : '');
 
-        // Show confirmation below buttons
-        setStatus(copied ? 'Drawing copied to clipboard' : 'Copy help shown below.');
-
-        // Open Gmail compose by default
-        openGmailCompose();
+        // Open Gmail compose with the appropriate body
+        openGmailCompose(copied ? EMAIL_BODY_TEXT : EMAIL_BODY_SCREENSHOT);
       } catch (err) {
         console.error('Failed to prepare the drawing', err);
         alert('Sorry, could not prepare the drawing to send.');
@@ -273,7 +177,6 @@
       clearCanvas();
       // Remove status when clearing
       setStatus('');
-      hideManualCopyPanel();
     });
   }
 
