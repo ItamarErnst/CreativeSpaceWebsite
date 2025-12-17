@@ -99,7 +99,7 @@
 
   // DONE button behavior
   const doneBtn = document.getElementById('draw-done');
-  // Removed manual copy fallback panel for mobile: we will just open Gmail
+  // We open the user's default mail app via mailto: (no Gmail forcing)
   function clearCanvas() {
     // Explicitly clear and repaint regardless of size change
     const dpr = window.devicePixelRatio || 1;
@@ -110,7 +110,7 @@
     ctx.fillRect(0, 0, canvas.width / dpr, canvas.height / dpr);
   }
 
-  // Email composition helpers (shared between mailto and Gmail link)
+  // Email composition helpers (used for mailto links)
   const EMAIL_TO = 'bliblablu.art@gmail.com';
   const EMAIL_SUBJECT = 'New drawing from BliBlaBlu website';
   const EMAIL_BODY_TEXT = [
@@ -136,10 +136,18 @@
     'Thank you!'
   ].join('\n');
 
-  function openGmailCompose(bodyText) {
-    const gmailUrl = `https://mail.google.com/mail/?view=cm&to=${encodeURIComponent(EMAIL_TO)}&su=${encodeURIComponent(EMAIL_SUBJECT)}&body=${encodeURIComponent(bodyText)}`;
-    // Open Gmail compose in a new tab as requested
-    window.open(gmailUrl, '_blank', 'noopener,noreferrer');
+  function openShortMailto(bodyText) {
+    const href = `mailto:${encodeURIComponent(EMAIL_TO)}?subject=${encodeURIComponent(EMAIL_SUBJECT)}&body=${encodeURIComponent(bodyText)}`;
+    // Use a temporary anchor to trigger the default mail client reliably
+    const a = document.createElement('a');
+    a.href = href;
+    a.style.display = 'none';
+    document.body.appendChild(a);
+    a.click();
+    // Cleanup
+    setTimeout(() => {
+      if (a && a.parentNode) a.parentNode.removeChild(a);
+    }, 0);
   }
 
   if (doneBtn) {
@@ -161,8 +169,8 @@
         // Update status only when copy truly succeeded
         setStatus(copied ? 'Drawing copied to clipboard' : '');
 
-        // Open Gmail compose with the appropriate body
-        openGmailCompose(copied ? EMAIL_BODY_TEXT : EMAIL_BODY_SCREENSHOT);
+        // Open default mail client with the appropriate body
+        openShortMailto(copied ? EMAIL_BODY_TEXT : EMAIL_BODY_SCREENSHOT);
       } catch (err) {
         console.error('Failed to prepare the drawing', err);
         alert('Sorry, could not prepare the drawing to send.');
@@ -180,5 +188,5 @@
     });
   }
 
-  // Removed optional Gmail link setup; we now open Gmail by default on DONE
+  // No Gmail forcing; we use the system's default mail handler via mailto
 })();
