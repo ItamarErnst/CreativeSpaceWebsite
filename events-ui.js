@@ -177,9 +177,6 @@
     }
 
     const { all } = pickEvents();
-    // Hide separate next-event block since we use accordion now
-    const nextSection = document.getElementById('next-event-section');
-    if (nextSection) nextSection.style.display = 'none';
     // Render accordion list
     renderAccordion(all);
   }

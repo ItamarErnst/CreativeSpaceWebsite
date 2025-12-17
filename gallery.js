@@ -4,19 +4,11 @@
 
   let images = [];
   let index = 0;
-  const imageElement = document.getElementById('art-image');
   // Community gallery elements
   const galleryImg = document.getElementById('gallery-image');
   const galleryTitle = document.getElementById('gallery-title');
   const btnPrev = document.getElementById('gallery-prev');
   const btnNext = document.getElementById('gallery-next');
-
-  function setTitleFromImage(path) {
-    const fileWithExt = path.split('/').pop();
-    const file = fileWithExt.replace(/\.[^/.]+$/, '');
-    const titleElement = document.getElementById('art-title');
-    if (titleElement) titleElement.textContent = file;
-  }
 
   async function fetchDirectoryPNGs() {
     try {
@@ -48,26 +40,13 @@
   async function discoverImages() {
     let list = await fetchDirectoryPNGs();
     if (!list.length) list = await probeNumberedPNGs();
-    if (!list.length && imageElement) {
-      const url = imageElement.getAttribute('src') || imageElement.src;
+    // Fallback: if discovery fails, use the current community gallery image
+    if (!list.length && galleryImg) {
+      const url = galleryImg.getAttribute('src') || galleryImg.src;
       if (url) list = [url];
     }
     images = list;
-    if (!images.length) return;
-
-    if (imageElement) {
-      index = 0;
-      imageElement.src = images[0];
-      setTitleFromImage(images[0]);
-
-      if (images.length > 1) {
-        setInterval(() => {
-          index = (index + 1) % images.length;
-          imageElement.src = images[index];
-          setTitleFromImage(images[index]);
-        }, 4000);
-      }
-    }
+    // No hero rotation or art-title updates needed; community gallery uses this list.
   }
 
   // Community gallery logic using the same discovered list

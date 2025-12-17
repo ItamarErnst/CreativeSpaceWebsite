@@ -179,23 +179,7 @@ img {
 
 /* removed right cream card and split layout */
 
-/* Badge label for the Next Event block */
-.next-badge {
-    position: absolute;
-    top: 12px;
-    left: 12px;
-    background: #000;
-    color: #fff;
-    padding: 6px 10px;
-    border-radius: 12px;
-    font-size: 12px;
-    font-weight: 700;
-    letter-spacing: 0.5px;
-}
-
-/* For the Next Event section: put text on the left, image on the right */
-.next-event .right { order: 1; }
-.next-event .left { order: 2; }
+/* removed: legacy Next Event badge and ordering rules (section no longer used) */
 
 /* removed unused .date style */
 
