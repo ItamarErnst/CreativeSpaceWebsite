@@ -7,8 +7,12 @@
     <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-    <header class="site-header">
-        <h1 class="brand">BliBlaBlu</h1>
+    <div class="intro-overlay" id="intro-overlay">
+        <div class="intro-brand" id="intro-brand" aria-hidden="true"></div>
+    </div>
+
+    <header class="site-header" id="site-header">
+        <h1 class="brand" id="brand">BliBlaBlu</h1>
         <p class="tagline">A free, community art hub in Zurich hosting pop-ups, workshops and open studios. We connect local artists, spark collaboration and make creativity accessible to everyone.</p>
         <div class="socials">
             <a href="https://instagram.com" target="_blank" rel="noopener noreferrer">Instagram</a>
@@ -17,16 +21,18 @@
         </div>
     </header>
 
-    <div id="today-highlight"></div>
+    <div class="page-content" id="page-content">
+        <div id="today-highlight"></div>
 
-    <section class="events-section">
-        <h2 class="section-title">Upcoming Events</h2>
-        <div id="events-list"></div>
-    </section>
+        <section class="events-section">
+            <h2 class="section-title">Upcoming Events</h2>
+            <div id="events-list"></div>
+        </section>
 
-    <footer class="site-footer">
-        <div>Made with love &bull; <a href="mailto:hello@creativespace.example">Contact us</a></div>
-    </footer>
+        <footer class="site-footer">
+            <div>Made with love &bull; <a href="mailto:hello@creativespace.example">Contact us</a></div>
+        </footer>
+    </div>
 
     <script src="utils.js"></script>
     <script src="sheets-data.js"></script>
