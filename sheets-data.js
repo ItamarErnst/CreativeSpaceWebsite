@@ -86,6 +86,7 @@
       events.push({
         name: name,
         date: date,
+        time: cellVal('time'),
         location: cellVal('location'),
         description: cellVal('description'),
         images: images
@@ -140,6 +141,7 @@
       events.push({
         name: trim(name),
         date: trim(date),
+        time: trim(row[idx['time'] ?? -1]),
         location: trim(row[idx['location'] ?? -1]),
         description: trim(row[idx['description'] ?? -1]),
         images: images
