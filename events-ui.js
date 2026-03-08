@@ -137,7 +137,23 @@
     }
   }
 
+  function showFetchingMessage() {
+    const highlight = document.getElementById('today-highlight');
+    const list = document.getElementById('events-list');
+    if (highlight) highlight.innerHTML = '';
+    if (list) {
+      list.innerHTML = '';
+      const el = document.createElement('div');
+      el.className = 'empty-state';
+      el.textContent = 'Loading events… please refresh the page if this takes too long.';
+      list.appendChild(el);
+    }
+  }
+
   async function init() {
+    // Clear any previously displayed events and show fetching message
+    showFetchingMessage();
+
     let events = [];
     try {
       if (window.SheetsData && typeof window.SheetsData.loadEventsFromSheet === 'function') {
@@ -146,6 +162,12 @@
     } catch (e) {
       console.warn('[Events] Failed to load events.', e);
     }
+
+    // Clear everything before rendering fresh data (override previous fetch)
+    const highlight = document.getElementById('today-highlight');
+    const list = document.getElementById('events-list');
+    if (highlight) highlight.innerHTML = '';
+    if (list) list.innerHTML = '';
 
     const { todayEvents, futureEvents, all } = categorizeEvents(events);
     const highlightedIds = renderTodayHighlight(todayEvents, futureEvents);

@@ -44,18 +44,52 @@
     return (v && String(v).trim()) || 'TBD';
   }
 
+  function parseTime(timeStr) {
+    if (!timeStr) return null;
+    // Match formats like "18:00", "6:00 PM", "6PM", "18.00"
+    const m = /^(\d{1,2})[:.]?(\d{2})?\s*(am|pm)?$/i.exec(timeStr.trim());
+    if (!m) return null;
+    let h = Number(m[1]);
+    const min = m[2] ? Number(m[2]) : 0;
+    const ampm = (m[3] || '').toLowerCase();
+    if (ampm === 'pm' && h < 12) h += 12;
+    if (ampm === 'am' && h === 12) h = 0;
+    if (h < 0 || h > 23 || min < 0 || min > 59) return null;
+    return { h, min };
+  }
+
   function buildGoogleCalendarUrl(ev) {
     const start = parseISODate(ev.date);
     if (!start) return '#';
-    const end = new Date(start.getTime());
-    end.setDate(end.getDate() + 1);
-    function icsDate(d){
-      const y = d.getFullYear();
-      const m = String(d.getMonth() + 1).padStart(2,'0');
-      const da = String(d.getDate()).padStart(2,'0');
-      return `${y}${m}${da}`;
+
+    const time = parseTime(ev.time);
+
+    if (time) {
+      // Timed event: use datetime format
+      start.setHours(time.h, time.min, 0, 0);
+      const end = new Date(start.getTime() + 2 * 60 * 60 * 1000); // default 2h duration
+      function icsDateTime(d) {
+        const y = d.getFullYear();
+        const mo = String(d.getMonth() + 1).padStart(2, '0');
+        const da = String(d.getDate()).padStart(2, '0');
+        const hh = String(d.getHours()).padStart(2, '0');
+        const mm = String(d.getMinutes()).padStart(2, '0');
+        return `${y}${mo}${da}T${hh}${mm}00`;
+      }
+      var dates = `${icsDateTime(start)}/${icsDateTime(end)}`;
+    } else {
+      // All-day event
+      const end = new Date(start.getTime());
+      end.setDate(end.getDate() + 1);
+      function icsDate(d) {
+        const y = d.getFullYear();
+        const mo = String(d.getMonth() + 1).padStart(2, '0');
+        const da = String(d.getDate()).padStart(2, '0');
+        return `${y}${mo}${da}`;
+      }
+      var dates = `${icsDate(start)}/${icsDate(end)}`;
     }
-    const dates = `${icsDate(start)}/${icsDate(end)}`;
+
     const params = new URLSearchParams({
       action: 'TEMPLATE',
       text: ev.name || 'Event',
@@ -209,12 +243,20 @@
       if (pageContent) pageContent.classList.add('visible');
     }
 
+    const base = prefersReduced ? 0 : (baseDelay || 200);
+
+    // Fade in the tagline after the intro settles
+    const tagline = document.querySelector('.tagline');
+    if (tagline) {
+      setTimeout(() => tagline.classList.add('is-visible'), base);
+    }
+
     const links = Array.from(document.querySelectorAll('.socials a'));
     if (links.length) {
-      const base = prefersReduced ? 0 : (baseDelay || 200);
       const step = prefersReduced ? 0 : 120;
+      const socialBase = base + (prefersReduced ? 0 : 300);
       links.forEach((a, i) => {
-        setTimeout(() => a.classList.add('is-visible'), base + step * i);
+        setTimeout(() => a.classList.add('is-visible'), socialBase + step * i);
       });
     }
   }
@@ -231,6 +273,29 @@
       setTimeout(initIntroAnimation, 300);
     }
   }
+
+  // Randomize background wave direction and drift on each page load
+  function initWaveBackground() {
+    const bg = document.querySelector('body::before');
+    // Random rotation angle for the wave lines
+    const angle = Math.floor(Math.random() * 360);
+    // Random drift direction (angle in radians)
+    const driftAngle = Math.random() * 2 * Math.PI;
+    const driftX = Math.round(Math.cos(driftAngle) * 300);
+    const driftY = Math.round(Math.sin(driftAngle) * 300);
+
+    // Inject dynamic keyframes and rotation
+    const style = document.createElement('style');
+    style.textContent =
+      'body::before { transform: rotate(' + angle + 'deg); }' +
+      '@keyframes waveDrift {' +
+      '  0%   { background-position: 0 0; }' +
+      '  100% { background-position: ' + driftX + 'px ' + driftY + 'px; }' +
+      '}';
+    document.head.appendChild(style);
+  }
+
+  initWaveBackground();
 
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', startWhenReady);
