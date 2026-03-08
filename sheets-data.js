@@ -9,6 +9,17 @@
 
   function trim(s){ return (s==null? '' : String(s)).trim(); }
 
+  // Split "16:00 - 18:00" into { time, endtime } or return as-is
+  function splitTimeRange(timeStr, existingEndtime) {
+    var t = trim(timeStr);
+    if (!t) return { time: '', endtime: trim(existingEndtime) };
+    var parts = t.split(/\s*[-–—]\s*/);
+    if (parts.length === 2 && /^\d{1,2}[:.]?\d{0,2}\s*(am|pm)?$/i.test(parts[0]) && /^\d{1,2}[:.]?\d{0,2}\s*(am|pm)?$/i.test(parts[1])) {
+      return { time: parts[0], endtime: trim(existingEndtime) || parts[1] };
+    }
+    return { time: t, endtime: trim(existingEndtime) };
+  }
+
   // ---- Google Sheet via JSONP (bypasses CORS) ----
 
   function loadFromGoogleSheet() {
@@ -70,8 +81,15 @@
       function cellVal(colName) {
         var idx = colMap[colName];
         if (idx === undefined || !cells[idx]) return '';
-        // Use formatted value (f) for dates, otherwise raw value (v)
-        return trim(cells[idx].f || cells[idx].v || '');
+        var cell = cells[idx];
+        var raw = String(cell.v || '');
+        // Google Sheets Date() for time values → extract HH:MM
+        var dm = /^Date\(\d+,\d+,\d+,(\d+),(\d+),\d+\)$/.exec(raw);
+        if (dm) {
+          return String(dm[1]).padStart(2,'0') + ':' + String(dm[2]).padStart(2,'0');
+        }
+        // Use formatted value (f) if available, otherwise raw value (v)
+        return trim(cell.f || cell.v || '');
       }
 
       var name = cellVal('name');
@@ -83,11 +101,14 @@
         ? imagesRaw.split(',').map(function(u){ return u.trim(); }).filter(Boolean)
         : [];
 
+      var times = splitTimeRange(cellVal('time'), cellVal('endtime') || cellVal('end time'));
       events.push({
         name: name,
         date: date,
-        time: cellVal('time'),
+        time: times.time,
+        endtime: times.endtime,
         location: cellVal('location'),
+        price: cellVal('price'),
         description: cellVal('description'),
         images: images
       });
@@ -138,11 +159,14 @@
       var images = trim(imagesRaw)
         ? trim(imagesRaw).split(',').map(function(u){ return u.trim(); }).filter(Boolean)
         : [];
+      var times = splitTimeRange(row[idx['time'] ?? -1], row[idx['endtime'] ?? idx['end time'] ?? -1]);
       events.push({
         name: trim(name),
         date: trim(date),
-        time: trim(row[idx['time'] ?? -1]),
+        time: times.time,
+        endtime: times.endtime,
         location: trim(row[idx['location'] ?? -1]),
+        price: trim(row[idx['price'] ?? -1]),
         description: trim(row[idx['description'] ?? -1]),
         images: images
       });

@@ -34,7 +34,7 @@
 
   function formatDate(dt) {
     try {
-      return dt.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
+      return dt.toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'short', day: 'numeric' });
     } catch {
       return 'TBD';
     }
@@ -46,13 +46,18 @@
 
   function parseTime(timeStr) {
     if (!timeStr) return null;
-    // Match formats like "18:00", "6:00 PM", "6PM", "18.00"
-    const m = /^(\d{1,2})[:.]?(\d{2})?\s*(am|pm)?$/i.exec(timeStr.trim());
+    var s = timeStr.trim();
+    // Handle Google Sheets Date() format: Date(1899,11,30,16,0,0)
+    var dm = /^Date\(\d+,\d+,\d+,(\d+),(\d+),\d+\)$/.exec(s);
+    if (dm) return { h: Number(dm[1]), min: Number(dm[2]) };
+    // Match formats like "18:00", "18:00:00", "6:00 PM", "6PM", "18.00"
+    var m = /^(\d{1,2})[:.](\d{2})(?::(\d{2}))?\s*(am|pm)?$/i.exec(s);
+    if (!m) m = /^(\d{1,2})\s*(am|pm)$/i.exec(s);
     if (!m) return null;
     let h = Number(m[1]);
-    const min = m[2] ? Number(m[2]) : 0;
-    const ampm = (m[3] || '').toLowerCase();
-    if (ampm === 'pm' && h < 12) h += 12;
+    const min = m[2] && !/^(am|pm)$/i.test(m[2]) ? Number(m[2]) : 0;
+    const ampm = ((m[4] || m[2] || '')).toLowerCase();
+    if ((ampm === 'pm' || ampm === 'pm') && h < 12) h += 12;
     if (ampm === 'am' && h === 12) h = 0;
     if (h < 0 || h > 23 || min < 0 || min > 59) return null;
     return { h, min };
@@ -67,7 +72,10 @@
     if (time) {
       // Timed event: use datetime format
       start.setHours(time.h, time.min, 0, 0);
-      const end = new Date(start.getTime() + 2 * 60 * 60 * 1000); // default 2h duration
+      const endTime = parseTime(ev.endtime);
+      const end = endTime
+        ? new Date(new Date(start).setHours(endTime.h, endTime.min, 0, 0))
+        : new Date(start.getTime() + 2 * 60 * 60 * 1000); // default 2h duration
       function icsDateTime(d) {
         const y = d.getFullYear();
         const mo = String(d.getMonth() + 1).padStart(2, '0');
@@ -107,6 +115,7 @@
     daysUntil,
     formatDate,
     safe,
+    parseTime,
     buildGoogleCalendarUrl
   };
 

@@ -22,8 +22,17 @@
   }
 
   function renderHighlightEvent(ev, isTodays) {
-    const timeHtml = ev.time ? ` <span class="today-event-location">\u2014 ${safe(ev.time)}</span>` : '';
-    const locationHtml = ev.location ? ` <span class="today-event-location">\u2014 ${safe(ev.location)}</span>` : '';
+    let timeStr = ev.time ? safe(ev.time) : '';
+    if (timeStr && ev.endtime) timeStr += ` - ${safe(ev.endtime)}`;
+
+    // Time - Location on one line
+    const timeLocParts = [];
+    if (timeStr) timeLocParts.push(timeStr);
+    if (ev.location) timeLocParts.push(safe(ev.location));
+    const timeLocHtml = timeLocParts.length ? `<div class="today-event-time">${timeLocParts.join(' \u2014 ')}</div>` : '';
+
+    const priceHtml = ev.price && ev.price !== 'TBD' ? `<div class="today-event-detail today-event-price">${safe(ev.price)}</div>` : '';
+    const descHtml = ev.description && ev.description !== 'TBD' ? `<div class="today-event-detail today-event-desc">${safe(ev.description)}</div>` : '';
 
     let actionBtn = '';
     if (isTodays && ev.location) {
@@ -33,7 +42,12 @@
     }
 
     return `<div class="today-event-row">
-      <div class="today-event-name"><span class="today-event-title">${safe(ev.name)}</span>${timeHtml}${locationHtml}</div>
+      <div class="today-event-info">
+        <div class="today-event-title">${safe(ev.name)}</div>
+        ${timeLocHtml}
+        ${priceHtml}
+        ${descHtml}
+      </div>
       ${actionBtn}
     </div>`;
   }
@@ -46,27 +60,33 @@
 
     if (todayEvents.length > 0) {
       todayEvents.forEach(ev => highlighted.add(ev));
-      const card = document.createElement('div');
-      card.className = 'today-card';
-      const eventsHtml = todayEvents.map(ev => renderHighlightEvent(ev, true)).join('');
-      card.innerHTML = `
-        <div class="today-label">Happening Today!</div>
-        ${eventsHtml}
-      `;
-      container.appendChild(card);
+      const wrapper = document.createElement('div');
+      wrapper.className = 'today-card';
+      wrapper.innerHTML = `<div class="today-label">Happening Today!</div>`;
+      todayEvents.forEach((ev, i) => {
+        const row = document.createElement('div');
+        row.className = 'today-event-card float-card';
+        if (todayEvents.length > 1) row.style.animationDelay = `${i * 0.8}s`;
+        row.innerHTML = renderHighlightEvent(ev, true);
+        wrapper.appendChild(row);
+      });
+      container.appendChild(wrapper);
     } else if (futureEvents.length > 0) {
       const nextDate = futureEvents[0]._dateObj.getTime();
       const sameDayEvents = futureEvents.filter(e => e._dateObj.getTime() === nextDate);
       sameDayEvents.forEach(ev => highlighted.add(ev));
       const days = daysUntil(sameDayEvents[0]._dateObj);
-      const card = document.createElement('div');
-      card.className = 'today-card next-up';
-      const eventsHtml = sameDayEvents.map(ev => renderHighlightEvent(ev, false)).join('');
-      card.innerHTML = `
-        <div class="today-label">Next Up: In ${days} day${days === 1 ? '' : 's'} — ${formatDate(sameDayEvents[0]._dateObj)}</div>
-        ${eventsHtml}
-      `;
-      container.appendChild(card);
+      const wrapper = document.createElement('div');
+      wrapper.className = 'today-card next-up';
+      wrapper.innerHTML = `<div class="today-label">Next Up: In ${days} day${days === 1 ? '' : 's'} \u2014 ${formatDate(sameDayEvents[0]._dateObj)}</div>`;
+      sameDayEvents.forEach((ev, i) => {
+        const row = document.createElement('div');
+        row.className = 'today-event-card float-card';
+        if (sameDayEvents.length > 1) row.style.animationDelay = `${i * 0.8}s`;
+        row.innerHTML = renderHighlightEvent(ev, false);
+        wrapper.appendChild(row);
+      });
+      container.appendChild(wrapper);
     }
 
     return highlighted;
@@ -85,31 +105,51 @@
       return;
     }
 
-    events.forEach(ev => {
+    const total = events.length;
+    events.forEach((ev, idx) => {
       const card = document.createElement('div');
       card.className = 'event-card';
+
+      // Gradient: creamy terracotta at top → white at bottom
+      const t = total > 1 ? idx / (total - 1) : 1;
+      const r = Math.round(242 + (255 - 242) * t);
+      const g = Math.round(214 + (255 - 214) * t);
+      const b = Math.round(196 + (255 - 196) * t);
+      card.style.background = `rgb(${r}, ${g}, ${b})`;
 
       let imagesHtml = '';
       if (ev.images && ev.images.length) {
         imagesHtml = `<div class="event-images">${ev.images.map(url => `<img src="${url}" alt="" />`).join('')}</div>`;
       }
 
+      const priceHtml = ev.price && ev.price !== 'TBD'
+        ? `<div class="event-price">${safe(ev.price)}</div>`
+        : '';
+
       const descHtml = ev.description && ev.description !== 'TBD'
         ? `<div class="event-description">${safe(ev.description)}</div>`
         : '';
 
-      const dateParts = [ev._dateObj ? formatDate(ev._dateObj) : 'TBD'];
-      if (ev.time) dateParts.push(safe(ev.time));
-      if (ev.location) dateParts.push(safe(ev.location));
-      const dateLocationLine = dateParts.join(' \u2014 ');
+      const dateLine = ev._dateObj ? formatDate(ev._dateObj) : 'TBD';
+      let timeLine = '';
+      if (ev.time) {
+        timeLine = safe(ev.time);
+        if (ev.endtime) timeLine += ` - ${safe(ev.endtime)}`;
+      }
+      const locationLine = ev.location ? safe(ev.location) : '';
 
       card.innerHTML = `
         <div class="event-name">${safe(ev.name)}</div>
-        <div class="event-date">${dateLocationLine}</div>
+        <div class="event-details">
+          <div class="event-date">${dateLine}</div>
+          ${timeLine ? `<div class="event-time">${timeLine}</div>` : ''}
+          ${locationLine ? `<div class="event-location">${locationLine}</div>` : ''}
+        </div>
         <div class="event-card-body">
           <div class="event-card-content">
-            ${descHtml}
             ${imagesHtml}
+            ${priceHtml}
+            ${descHtml}
           </div>
           <a class="cal-link" href="${buildGoogleCalendarUrl(ev)}" target="_blank" rel="noopener noreferrer">📅</a>
         </div>

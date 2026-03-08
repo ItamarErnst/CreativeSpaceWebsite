@@ -204,23 +204,48 @@ img {
 }
 
 /* ---------- Today / Next-Up Highlight ---------- */
+/* Today / Next Up wrapper */
 .today-card {
     max-width: var(--max-w);
     margin: 0 auto 32px;
-    padding: 24px 28px;
-    border-radius: var(--radius);
     color: #fff;
-    background: var(--accent);
 }
 
-.today-card.next-up {
-    background: #E87D6A;
+@keyframes floatTilt {
+    0%   { transform: translateY(0)    rotate(0deg); }
+    25%  { transform: translateY(-6px) rotate(0.5deg); }
+    50%  { transform: translateY(0)    rotate(0deg); }
+    75%  { transform: translateY(-4px) rotate(-0.4deg); }
+    100% { transform: translateY(0)    rotate(0deg); }
 }
 
+/* Title bar: rounded top, sharp bottom */
 .today-card .today-label {
     font-family: 'Mamoth', Arial, sans-serif;
     font-size: 24px;
-    margin-bottom: 6px;
+    padding: 18px 28px;
+    border-radius: var(--radius) var(--radius) 0 0;
+    background: var(--accent);
+}
+
+.today-card.next-up .today-label {
+    background: #E87D6A;
+}
+
+/* Individual event cards: rounded, separated */
+.today-event-card {
+    background: var(--accent);
+    border-radius: var(--radius);
+    padding: 16px 28px;
+    margin: 8px 0 0;
+}
+
+.today-event-card.float-card {
+    animation: floatTilt 6s ease-in-out infinite;
+}
+
+.today-card.next-up .today-event-card {
+    background: #E87D6A;
 }
 
 .today-event-row {
@@ -228,27 +253,38 @@ img {
     align-items: center;
     justify-content: space-between;
     gap: 12px;
-    padding: 10px 0;
 }
 
-.today-event-row + .today-event-row {
-    border-top: 1px solid rgba(255,255,255,0.3);
-}
-
-.today-card .today-event-name {
-    font-size: 18px;
-    font-weight: 700;
+.today-event-info {
     flex: 1;
     min-width: 0;
 }
 
 .today-event-title {
+    font-size: 22px;
+    font-weight: 800;
     text-transform: uppercase;
 }
 
-.today-event-location {
-    text-transform: none;
+.today-event-time {
+    font-size: 16px;
+    font-weight: 700;
+}
+
+.today-event-detail {
+    font-size: 14px;
     font-weight: 400;
+    opacity: 0.9;
+}
+
+.today-event-price {
+    font-weight: 600;
+    margin-top: 4px;
+}
+
+.today-event-desc {
+    margin-top: 4px;
+    line-height: 1.5;
 }
 
 .today-action {
@@ -283,7 +319,10 @@ img {
     font-family: 'Mamoth', Arial, sans-serif;
     font-size: 32px;
     color: var(--accent);
-    margin-bottom: 12px;
+    background: #f2d6c4;
+    padding: 18px 28px;
+    border-radius: var(--radius) var(--radius) 0 0;
+    margin-bottom: 8px;
 }
 
 /* ---------- Event Card ---------- */
@@ -312,11 +351,34 @@ img {
     text-transform: uppercase;
 }
 
+.event-card .event-details {
+    margin-bottom: 8px;
+}
+
 .event-card .event-date {
     font-size: 15px;
     color: var(--accent);
     font-weight: 600;
-    margin-bottom: 8px;
+}
+
+.event-card .event-time {
+    font-size: 14px;
+    color: var(--accent);
+    font-weight: 500;
+}
+
+.event-card .event-location {
+    font-size: 14px;
+    color: var(--text);
+    font-weight: 500;
+    opacity: 0.8;
+}
+
+.event-card .event-price {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--accent);
+    margin-bottom: 4px;
 }
 
 .event-card .event-description {
@@ -442,7 +504,14 @@ img {
     .today-card {
         margin-left: 16px;
         margin-right: 16px;
-        padding: 20px 22px;
+    }
+
+    .today-card .today-label {
+        padding: 14px 20px;
+    }
+
+    .today-event-card {
+        padding: 14px 20px;
     }
 
     .events-section {
@@ -476,6 +545,10 @@ img {
         transition: none !important;
         opacity: 1 !important;
         transform: none !important;
+    }
+
+    .today-event-card.float-card {
+        animation: none !important;
     }
 
     .intro-overlay {
