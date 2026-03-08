@@ -89,14 +89,15 @@
       container.appendChild(card);
     });
 
-    // Fade-up animation via IntersectionObserver
+    // Fade in on enter, fade out on leave
     const prefersReduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     if (!prefersReduced) {
       const observer = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
           if (entry.isIntersecting) {
             entry.target.classList.add('visible');
-            observer.unobserve(entry.target);
+          } else {
+            entry.target.classList.remove('visible');
           }
         });
       }, { threshold: 0.1 });

@@ -3,7 +3,7 @@
 (function(global){
   'use strict';
 
-  const GOOGLE_SHEET_URL = 'https://docs.google.com/spreadsheets/d/1XwudtMLabL1FlTdqDJL_m1dtat0yWJh3PCSuB2L_5LA/export?format=csv';
+  const GOOGLE_SHEET_URL = 'https://docs.google.com/spreadsheets/d/1XwudtMLabL1FlTdqDJL_m1dtat0yWJh3PCSuB2L_5LA/gviz/tq?tqx=out:csv';
   const LOCAL_CSV = 'data/creative-space-events.csv';
 
   function trim(s){ return (s==null? '' : String(s)).trim(); }

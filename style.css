@@ -177,7 +177,6 @@ img {
 .event-card .event-location {
     font-size: 14px;
     color: var(--muted);
-    margin-bottom: 12px;
 }
 
 .event-card .event-description {
