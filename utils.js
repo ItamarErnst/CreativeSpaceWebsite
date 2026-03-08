@@ -77,33 +77,26 @@
   };
 
   // -----------------------------
-  // Intro animation + load animations
+  // Intro animation
   // -----------------------------
+
   // Create 8 comic-style burst lines around a character, pointing outward
   function spawnBurstLines(charWrap) {
-    // 8 directions: top, top-right, right, bottom-right, bottom, bottom-left, left, top-left
     const angles = [0, 45, 90, 135, 180, 225, 270, 315];
     const colors = ['var(--accent)', 'var(--accent-gold)', '#E87D6A'];
     const charRect = charWrap.getBoundingClientRect();
-    // Distance from center to edge of char, plus gap
     const rx = charRect.width / 2 + 6;
     const ry = charRect.height / 2 + 4;
 
     angles.forEach((angleDeg, i) => {
       const line = document.createElement('div');
       line.className = 'burst-line';
-
       const rad = angleDeg * Math.PI / 180;
-      // Push the line start to just outside the character edge
       const ox = Math.sin(rad) * rx;
       const oy = -Math.cos(rad) * ry;
-
-      // Rotate so the line points outward (away from center)
-      // angle 0 = top = line grows upward (no rotation needed)
       line.style.transform = `translate(-50%, 0) translate(${ox.toFixed(1)}px, ${oy.toFixed(1)}px) rotate(${angleDeg}deg)`;
       line.style.transformOrigin = 'center top';
       line.style.background = colors[i % 3];
-
       charWrap.appendChild(line);
       setTimeout(() => line.classList.add('active'), 20 + i * 20);
     });
@@ -111,7 +104,6 @@
 
   function initIntroAnimation() {
     const prefersReduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
     if (prefersReduced) {
       revealPage();
       return;
@@ -122,10 +114,10 @@
     const brand = document.getElementById('brand');
     if (!overlay || !introBrand || !brand) { revealPage(); return; }
 
-    // Hide the real h1 — intro brand will replace it
-    brand.classList.add('hidden');
+    // Hide the real h1 — we'll show it back at the end
+    brand.style.visibility = 'hidden';
 
-    // Split "BliBlaBlu" into individual character spans with wrappers
+    // Build character spans
     const text = 'BliBlaBlu';
     const charWraps = [];
     const charSpans = [];
@@ -141,7 +133,7 @@
       charSpans.push(span);
     });
 
-    // Pop in each character with stagger + burst lines
+    // Phase 1: Pop in each character
     const popDelay = 100;
     charSpans.forEach((span, i) => {
       setTimeout(() => {
@@ -150,64 +142,48 @@
       }, i * popDelay);
     });
 
-    // After all chars popped, do a little wiggle on each
+    // Phase 2: Wiggle
     const allPoppedTime = charSpans.length * popDelay + 450;
     setTimeout(() => {
       charSpans.forEach((span, i) => {
-        setTimeout(() => {
-          span.classList.add('wiggling');
-        }, i * 50);
+        setTimeout(() => span.classList.add('wiggling'), i * 50);
       });
     }, allPoppedTime);
 
-    // After wiggle, slide the text up to the header brand position
+    // Phase 3: Slide up to the header position + fade overlay background
     const slideTime = allPoppedTime + 600 + 300;
     setTimeout(() => {
-      // Temporarily show real brand to measure its position
-      brand.style.display = '';
-      brand.style.visibility = 'hidden';
+      // Measure where the real brand h1 is
       const brandRect = brand.getBoundingClientRect();
-      brand.style.display = 'none';
-
       const introRect = introBrand.getBoundingClientRect();
 
-      // Slide to center-top (where the brand h1 sits)
-      const dx = brandRect.left + brandRect.width / 2 - (introRect.left + introRect.width / 2);
-      const dy = brandRect.top + brandRect.height / 2 - (introRect.top + introRect.height / 2);
+      const dx = (brandRect.left + brandRect.width / 2) - (introRect.left + introRect.width / 2);
+      const dy = (brandRect.top + brandRect.height / 2) - (introRect.top + introRect.height / 2);
       const scaleRatio = brandRect.width / introRect.width;
 
-      // Start fading overlay background as the text moves
-      overlay.classList.add('reveal');
-
-      introBrand.classList.add('sliding');
+      // Animate the text sliding up
+      introBrand.style.transition = 'transform 800ms cubic-bezier(0.22, 1, 0.36, 1)';
       introBrand.style.transform = `translate(${dx}px, ${dy}px) scale(${scaleRatio})`;
+
+      // Simultaneously fade the overlay background to transparent
+      overlay.style.transition = 'background-color 800ms ease';
+      overlay.style.backgroundColor = 'transparent';
     }, slideTime);
 
-    // After slide completes, settle the brand into the header permanently
-    const settleTime = slideTime + 850;
+    // Phase 4: Clean swap — show the real h1 and remove the overlay
+    const settleTime = slideTime + 820;
     setTimeout(() => {
-      // Move the intro brand element into the header, replacing the h1
-      const header = document.getElementById('site-header');
-      introBrand.classList.remove('sliding');
-      introBrand.classList.add('settled');
-      introBrand.style.transform = '';
-      introBrand.removeAttribute('aria-hidden');
-      introBrand.setAttribute('role', 'heading');
-      introBrand.setAttribute('aria-level', '1');
-      header.insertBefore(introBrand, header.firstChild);
+      // Show the real brand
+      brand.style.visibility = '';
 
-      // Remove the overlay (background is already transparent)
-      overlay.classList.add('done');
-      setTimeout(() => overlay.remove(), 50);
+      // Remove overlay entirely (intro text disappears, real h1 is now visible at same spot)
+      overlay.remove();
 
-      // Fade in page content
+      // Fade in the rest of the page
       const pageContent = document.getElementById('page-content');
-      if (pageContent) {
-        setTimeout(() => pageContent.classList.add('visible'), 50);
-      }
+      if (pageContent) pageContent.classList.add('visible');
 
-      // Stagger social links
-      revealPage(200);
+      revealPage(100);
     }, settleTime);
   }
 

@@ -45,21 +45,11 @@ img {
     position: fixed;
     inset: 0;
     z-index: 1000;
-    background: var(--bg);
+    background-color: var(--bg);
     display: flex;
     align-items: center;
     justify-content: center;
     pointer-events: none;
-}
-
-/* Fade only the background, text stays */
-.intro-overlay.reveal {
-    transition: background 600ms ease;
-    background: transparent;
-}
-
-.intro-overlay.done {
-    background: transparent;
 }
 
 .intro-brand {
@@ -73,22 +63,6 @@ img {
     will-change: transform;
 }
 
-/* Settled: lives in header as the permanent title */
-.intro-brand.settled {
-    position: static;
-    display: flex;
-    justify-content: center;
-    font-size: clamp(48px, 12vw, 128px);
-    transform: none !important;
-    transition: none;
-    will-change: auto;
-}
-
-.intro-brand.settled .char-wrap { position: relative; display: inline-block; }
-.intro-brand.settled .char { display: inline-block; opacity: 1; transform: none; animation: none; }
-.intro-brand.settled .burst-line { display: none; }
-
-/* Each character wrapper (positioned for burst lines) */
 .intro-brand .char-wrap {
     position: relative;
     display: inline-block;
@@ -149,16 +123,6 @@ img {
     animation: burstShoot 380ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
 
-/* ---------- Intro slide transition ---------- */
-.intro-brand.sliding {
-    transition: transform 800ms cubic-bezier(0.22, 1, 0.36, 1);
-}
-
-/* Hide the real h1 — intro brand replaces it */
-.brand.hidden {
-    display: none;
-}
-
 /* Page content fades in after intro */
 .page-content {
     opacity: 0;
@@ -185,8 +149,6 @@ img {
     margin: 0 auto 12px;
     color: var(--accent);
     text-align: center;
-    display: flex;
-    justify-content: center;
 }
 
 .tagline {
@@ -427,14 +389,6 @@ img {
 
     .intro-overlay {
         display: none !important;
-    }
-
-    .brand.hidden {
-        display: flex !important;
-    }
-
-    .intro-brand .char {
-        animation: none !important;
     }
 
     .page-content {
