@@ -92,15 +92,15 @@
     return highlighted;
   }
 
-  function renderEventCards(events) {
-    const container = document.getElementById('events-list');
+  function renderEventCards(events, { containerId = 'events-list', showCalendar = true, emptyText = 'No upcoming events right now' } = {}) {
+    const container = document.getElementById(containerId);
     if (!container) return;
     container.innerHTML = '';
 
     if (!events.length) {
       const el = document.createElement('div');
       el.className = 'empty-state';
-      el.textContent = 'No upcoming events right now';
+      el.textContent = emptyText;
       container.appendChild(el);
       return;
     }
@@ -138,6 +138,10 @@
       }
       const locationLine = ev.location ? safe(ev.location) : '';
 
+      const calBtn = showCalendar
+        ? `<a class="cal-link" href="${buildGoogleCalendarUrl(ev)}" target="_blank" rel="noopener noreferrer">📅</a>`
+        : '';
+
       card.innerHTML = `
         <div class="event-name">${safe(ev.name)}</div>
         <div class="event-details">
@@ -151,7 +155,7 @@
             ${priceHtml}
             ${descHtml}
           </div>
-          <a class="cal-link" href="${buildGoogleCalendarUrl(ev)}" target="_blank" rel="noopener noreferrer">📅</a>
+          ${calBtn}
         </div>
       `;
 
@@ -176,6 +180,9 @@
       container.querySelectorAll('.event-card').forEach(card => card.classList.add('visible'));
     }
   }
+
+  // Expose shared utilities for past-events page
+  window.EventsUI = { renderEventCards };
 
   function showFetchingMessage() {
     const highlight = document.getElementById('today-highlight');
