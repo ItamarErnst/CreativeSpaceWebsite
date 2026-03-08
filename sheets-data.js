@@ -1,12 +1,13 @@
 // CSV data loader for events (client-side, no server)
-// Exposes window.SheetsData.loadEventsFromSheet(url?) which reads a CSV file.
-// Default source (when url omitted): "data/creative-space-events.csv" (no spaces; mobile-safe path).
+// Primary: Google Sheet CSV export. Fallback: local CSV file.
 (function(global){
   'use strict';
 
+  const GOOGLE_SHEET_URL = 'https://docs.google.com/spreadsheets/d/1XwudtMLabL1FlTdqDJL_m1dtat0yWJh3PCSuB2L_5LA/export?format=csv';
+  const LOCAL_CSV = 'data/creative-space-events.csv';
+
   function trim(s){ return (s==null? '' : String(s)).trim(); }
 
-  // Small CSV parser supporting quoted fields and commas/newlines inside quotes
   function parseCSV(text){
     const rows = [];
     let i = 0, field = '', row = [], inQuotes = false;
@@ -20,11 +21,10 @@
         if (ch === '"') { inQuotes = true; }
         else if (ch === ',') { row.push(field); field = ''; }
         else if (ch === '\n') { row.push(field); rows.push(row); row = []; field=''; }
-        else if (ch === '\r') { /* ignore, handle on \n */ }
+        else if (ch === '\r') { /* ignore */ }
         else { field += ch; }
       }
     }
-    // push last
     row.push(field);
     rows.push(row);
     return rows;
@@ -33,7 +33,6 @@
   function headerIndexMap(header){
     const map = {};
     header.forEach((h, idx)=>{
-      // Normalize header: trim, lowercase, strip BOM if present
       const key = trim(h).replace(/^\uFEFF/, '').toLowerCase();
       map[key] = idx;
     });
@@ -50,42 +49,52 @@
       if (!row || row.every(c => trim(c)==='')) continue;
       const name = row[idx['name'] ?? -1];
       const date = row[idx['date'] ?? -1];
-      // Require at least name and date
       if (!trim(name) || !trim(date)) continue;
       const location = row[idx['location'] ?? -1];
       const description = row[idx['description'] ?? -1];
+      const imagesRaw = row[idx['image(s)'] ?? idx['images'] ?? -1];
+      const images = trim(imagesRaw)
+        ? trim(imagesRaw).split(',').map(u => u.trim()).filter(Boolean)
+        : [];
       const ev = {
         name: trim(name),
         date: trim(date),
         location: trim(location),
-        description: trim(description)
+        description: trim(description),
+        images
       };
       events.push(ev);
     }
     return events;
   }
 
-  async function loadEventsFromSheet(url){
-    const target = (url && String(url).trim()) || 'data/creative-space-events.csv';
-    let res;
+  async function fetchCSV(url) {
+    const res = await fetch(url, { cache: 'no-store' });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    return await res.text();
+  }
+
+  async function loadEventsFromSheet(){
+    let text;
     try {
-      res = await fetch(encodeURI(target), { cache: 'no-store' });
+      text = await fetchCSV(GOOGLE_SHEET_URL);
+      console.log('[SheetsData] Loaded from Google Sheet');
     } catch (err) {
-      console.error('[SheetsData] Network error fetching CSV', { target }, err);
-      throw err;
+      console.warn('[SheetsData] Google Sheet fetch failed, falling back to local CSV', err);
+      try {
+        text = await fetchCSV(LOCAL_CSV);
+        console.log('[SheetsData] Loaded from local CSV fallback');
+      } catch (err2) {
+        console.error('[SheetsData] Both sources failed', err2);
+        throw err2;
+      }
     }
-    if (!res.ok) {
-      const msg = `[SheetsData] Failed to fetch CSV ${target} (status ${res.status})`;
-      console.error(msg);
-      throw new Error(msg);
-    }
-    const text = await res.text();
     const rows = parseCSV(text);
     const events = rowsToEvents(rows);
     if (!events.length) {
-      console.warn('[SheetsData] CSV parsed but no events found. Check headers (need name,date,location,description).', { target, header: rows && rows[0] });
+      console.warn('[SheetsData] CSV parsed but no events found.');
     } else {
-      console.log(`[SheetsData] Loaded ${events.length} event(s) from`, target);
+      console.log(`[SheetsData] Loaded ${events.length} event(s)`);
     }
     return events;
   }

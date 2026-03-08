@@ -7,55 +7,29 @@
     <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-    <section class="hero">
-        <div class="hero-inner">
-            <h1 class="brand">BliBlaBlu</h1>
-            <p class="subtitle">is a free, community art hub in Zurich hosting pop‑ups, workshops and open studios. We connect local artists, spark collaboration and make creativity accessible to everyone.</p>
-            <div class="socials">
-                <a href="https://instagram.com" target="_blank" rel="noopener noreferrer">Instagram</a>
-                <a href="https://telegram.org" target="_blank" rel="noopener noreferrer">Telegram</a>
-                <a href="https://www.whatsapp.com" target="_blank" rel="noopener noreferrer">WhatsApp</a>
-            </div>
+    <header class="site-header">
+        <h1 class="brand">BliBlaBlu</h1>
+        <p class="tagline">A free, community art hub in Zurich hosting pop-ups, workshops and open studios. We connect local artists, spark collaboration and make creativity accessible to everyone.</p>
+        <div class="socials">
+            <a href="https://instagram.com" target="_blank" rel="noopener noreferrer">Instagram</a>
+            <a href="https://telegram.org" target="_blank" rel="noopener noreferrer">Telegram</a>
+            <a href="https://www.whatsapp.com" target="_blank" rel="noopener noreferrer">WhatsApp</a>
         </div>
-    </section>
+    </header>
 
-    <!-- Order requested: Title (above), then Events, then Drawing, then Gallery -->
-    <section class="events">
+    <div id="today-highlight"></div>
+
+    <section class="events-section">
         <h2 class="section-title">Upcoming Events</h2>
-        <div id="upcoming-list" class="accordion"></div>
+        <div id="events-list"></div>
     </section>
 
-    <section>
-        <div class="draw-area" id="draw-area">
-            <canvas id="draw-canvas" width="400" height="400" aria-label="Drawing canvas"></canvas>
-            <div class="draw-caption">Draw something for us</div>
-            <div class="draw-actions">
-                <button id="draw-done" class="draw-done" type="button">DONE</button>
-                <button id="draw-clear" class="draw-clear" type="button">Clear</button>
-            </div>
-            <div id="draw-status" class="draw-status" aria-live="polite"></div>
-        </div>
-    </section>
-
-    <section class="community-gallery">
-        <h2 class="section-title">Community Gallery</h2>
-        <div class="gallery" id="community-gallery" data-gallery>
-            <button class="nav prev" id="gallery-prev" aria-label="Previous image">‹</button>
-            <img id="gallery-image" src="images/art1.png" alt="Gallery" />
-            <button class="nav next" id="gallery-next" aria-label="Next image">›</button>
-        </div>
-        <div id="gallery-title" class="gallery-title">art1</div>
-    </section>
-
-    <!-- Utilities and data loading -->
-    <script src="draw.js"></script>
-    <script src="utils.js"></script>
-    <!-- CSV loader (reads from "data/creative-space-events.csv") -->
-    <script src="sheets-data.js"></script>
-    <script src="gallery.js"></script>
-    <script src="events-ui.js"></script>
     <footer class="site-footer">
-        <div>Made with love • <a href="mailto:hello@creativespace.example">Contact us</a></div>
+        <div>Made with love &bull; <a href="mailto:hello@creativespace.example">Contact us</a></div>
     </footer>
+
+    <script src="utils.js"></script>
+    <script src="sheets-data.js"></script>
+    <script src="events-ui.js"></script>
 </body>
 </html>

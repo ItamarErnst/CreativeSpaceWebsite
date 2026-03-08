@@ -1,184 +1,125 @@
-// Events UI: render Next Event and Upcoming list, calendar links, and multi-image carousel
-// Data source: loads events exclusively from the CSV file at "data/creative-space-events.csv".
+// Events UI: loads events, renders today highlight and upcoming event cards
 (function(){
   'use strict';
 
-  const { parseISODate, isUpcoming, formatDate, safe, buildGoogleCalendarUrl } = window.CSUtils || {};
+  const { parseISODate, isUpcoming, isToday, daysUntil, formatDate, safe, buildGoogleCalendarUrl } = window.CSUtils || {};
 
-  // Track scroll direction
-  let lastScrollY = window.scrollY || 0;
-  let scrollingDown = true;
-  window.addEventListener('scroll', () => {
-    const y = window.scrollY || 0;
-    scrollingDown = y >= lastScrollY;
-    lastScrollY = y;
-  }, { passive: true });
-
-  function pickEvents() {
+  function categorizeEvents(events) {
     const today = new Date();
-    today.setHours(0,0,0,0);
-    const source = Array.isArray(window.EVENTS) ? window.EVENTS : [];
-    const enriched = source.map(e => ({ ...e, _dateObj: parseISODate(e.date) }))
+    today.setHours(0, 0, 0, 0);
+    const enriched = events
+      .map(e => ({ ...e, _dateObj: parseISODate(e.date) }))
       .filter(e => e._dateObj && isUpcoming(e._dateObj, today))
-      .sort((a,b) => a._dateObj - b._dateObj);
-    return { all: enriched };
+      .sort((a, b) => a._dateObj - b._dateObj);
+
+    const todayEvents = enriched.filter(e => isToday(e._dateObj));
+    const futureEvents = enriched.filter(e => !isToday(e._dateObj));
+    return { todayEvents, futureEvents, all: enriched };
   }
 
-  // removed: legacy next-event rendering and inline carousel helpers (unused)
-
-  function renderAccordion(all) {
-    const container = document.getElementById('upcoming-list');
+  function renderTodayHighlight(todayEvents, futureEvents) {
+    const container = document.getElementById('today-highlight');
     if (!container) return;
     container.innerHTML = '';
-    if (!all || !all.length) {
-      const empty = document.createElement('div');
-      empty.className = 'event';
-      empty.textContent = 'No upcoming events.';
-      container.appendChild(empty);
+
+    if (todayEvents.length > 0) {
+      todayEvents.forEach(ev => {
+        const card = document.createElement('div');
+        card.className = 'today-card';
+        card.innerHTML = `
+          <div class="today-label">Happening Today!</div>
+          <div class="today-event-name">${safe(ev.name)}</div>
+          <div class="today-meta">${safe(ev.location)}</div>
+        `;
+        container.appendChild(card);
+      });
+    } else if (futureEvents.length > 0) {
+      const next = futureEvents[0];
+      const days = daysUntil(next._dateObj);
+      const card = document.createElement('div');
+      card.className = 'today-card next-up';
+      card.innerHTML = `
+        <div class="today-label">Next Up: In ${days} day${days === 1 ? '' : 's'}</div>
+        <div class="today-event-name">${safe(next.name)}</div>
+        <div class="today-meta">${formatDate(next._dateObj)}${next.location ? ' \u2022 ' + safe(next.location) : ''}</div>
+      `;
+      container.appendChild(card);
+    }
+  }
+
+  function renderEventCards(events) {
+    const container = document.getElementById('events-list');
+    if (!container) return;
+    container.innerHTML = '';
+
+    if (!events.length) {
+      const el = document.createElement('div');
+      el.className = 'empty-state';
+      el.textContent = 'No upcoming events right now';
+      container.appendChild(el);
       return;
     }
 
-    all.forEach((ev, idx) => {
-      const dateText = ev._dateObj ? formatDate(ev._dateObj) : 'TBD';
-      const nameText = safe(ev.name);
-      const locText = safe(ev.location);
+    events.forEach(ev => {
+      const card = document.createElement('div');
+      card.className = 'event-card';
 
-      const item = document.createElement('div');
-      item.className = 'event';
-      if (idx === 0) item.classList.add('open','locked');
-
-      const header = document.createElement('div');
-      header.className = 'event-header';
-
-      const left = document.createElement('div');
-      left.innerHTML = `<div class="title">${nameText}</div><div class="meta">${dateText} • ${locText}</div>`;
-      header.appendChild(left);
-
-      const actions = document.createElement('div');
-      header.appendChild(actions);
-
-      // Calendar emoji anchored to top-right of the event panel
-      const calIcon = document.createElement('a');
-      calIcon.href = buildGoogleCalendarUrl(ev);
-      calIcon.target = '_blank';
-      calIcon.rel = 'noopener noreferrer';
-      calIcon.className = 'calendar-icon';
-      calIcon.title = 'Add to Calendar';
-      calIcon.textContent = '📅';
-
-      // Blue arrow anchored to bottom-right of the event panel
-      const toggle = document.createElement('span');
-      toggle.className = 'toggle';
-      toggle.textContent = idx === 0 ? '' : '▾';
-
-      const body = document.createElement('div');
-      body.className = 'event-body';
-      body.innerHTML = `<p class="event-meta">${safe(ev.description)}</p>`;
-
-      item.appendChild(header);
-      item.appendChild(calIcon);
-      item.appendChild(toggle);
-      item.appendChild(body);
-      container.appendChild(item);
-
-      if (idx === 0) {
-        body.style.display = 'block';
+      let imagesHtml = '';
+      if (ev.images && ev.images.length) {
+        imagesHtml = `<div class="event-images">${ev.images.map(url => `<img src="${url}" alt="" />`).join('')}</div>`;
       }
 
-      function toggleItem() {
-        if (idx === 0) return; // locked open
-        const isOpen = item.classList.contains('open');
-        if (isOpen) {
-          item.classList.remove('open');
-          body.style.display = 'none';
-          toggle.textContent = '▾';
-        } else {
-          item.classList.add('open');
-          body.style.display = 'block';
-          toggle.textContent = '▴';
-        }
-      }
+      const descHtml = ev.description && ev.description !== 'TBD'
+        ? `<div class="event-description">${safe(ev.description)}</div>`
+        : '';
 
-      header.addEventListener('click', (e) => {
-        toggleItem();
-      });
+      const locationHtml = ev.location
+        ? `<div class="event-location">${safe(ev.location)}</div>`
+        : '';
 
-      toggle.addEventListener('click', (e) => {
-        e.stopPropagation();
-        toggleItem();
-      });
+      card.innerHTML = `
+        <div class="event-name">${safe(ev.name)}</div>
+        <div class="event-date">${ev._dateObj ? formatDate(ev._dateObj) : 'TBD'}</div>
+        ${locationHtml}
+        ${imagesHtml}
+        ${descHtml}
+        <a class="cal-link" href="${buildGoogleCalendarUrl(ev)}" target="_blank" rel="noopener noreferrer">Add to Google Calendar</a>
+      `;
+
+      container.appendChild(card);
     });
 
-    // After rendering, hook up intersection-based animations
-    setupEventAnimations();
-  }
-
-  function setupEventAnimations() {
-    const items = Array.from(document.querySelectorAll('#upcoming-list .event'));
-    if (!items.length) return;
+    // Fade-up animation via IntersectionObserver
     const prefersReduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    
-    // Observer that reveals on enter and hides when scrolled past the bottom while scrolling down
-    const observer = new IntersectionObserver((entries) => {
-      const vh = (observer.root && observer.root.clientHeight) || window.innerHeight || 0;
-      entries.forEach(entry => {
-        const el = entry.target;
-        const idx = items.indexOf(el);
-        const delayMs = prefersReduced ? 0 : Math.min(120 * idx, 420); // slightly more stagger than before
-
-        if (entry.isIntersecting) {
-          // Element entered viewport
-          // If we are scrolling down, reveal from left with stagger
-          if (scrollingDown) {
-            el.classList.remove('from-right');
-            el.classList.add('from-left');
-            el.style.transitionDelay = `${delayMs}ms`;
-            el.classList.add('in-view');
-          } else {
-            // Scrolling up: keep it visible (do not reverse or hide)
-            el.style.transitionDelay = '0ms';
-            el.classList.add('in-view');
+    if (!prefersReduced) {
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('visible');
+            observer.unobserve(entry.target);
           }
-          return;
-        }
+        });
+      }, { threshold: 0.1 });
 
-        // Not intersecting: decide whether to hide
-        const top = entry.boundingClientRect.top;
-        // If leaving towards the bottom of the screen while scrolling down, hide so it can slide again next time
-        if (scrollingDown && top >= vh) {
-          el.classList.remove('in-view');
-          // Reset starting pose for next reveal
-          el.classList.remove('from-right');
-          el.classList.add('from-left');
-          el.style.transitionDelay = '0ms';
-        }
-        // If leaving towards the top while scrolling up, do nothing — keep state so when user scrolls up it stays active
-      });
-    }, { root: null, rootMargin: '0px', threshold: 0.12 });
-
-    items.forEach(el => {
-      // initialize off-screen position so first reveal slides from left
-      el.classList.add('from-left');
-      observer.observe(el);
-    });
+      container.querySelectorAll('.event-card').forEach(card => observer.observe(card));
+    } else {
+      container.querySelectorAll('.event-card').forEach(card => card.classList.add('visible'));
+    }
   }
 
   async function init() {
-    // Load events from the default CSV in data/ (no fallback)
+    let events = [];
     try {
       if (window.SheetsData && typeof window.SheetsData.loadEventsFromSheet === 'function') {
-        const loaded = await window.SheetsData.loadEventsFromSheet(); // defaults to data/creative-space-events.csv
-        if (Array.isArray(loaded)) {
-          window.EVENTS = loaded;
-        }
+        events = await window.SheetsData.loadEventsFromSheet();
       }
     } catch (e) {
-      console.warn('[Events] Failed to load events from CSV. No events will be shown.', e);
+      console.warn('[Events] Failed to load events.', e);
     }
 
-    const { all } = pickEvents();
-    // Render accordion list
-    renderAccordion(all);
+    const { todayEvents, futureEvents, all } = categorizeEvents(events);
+    renderTodayHighlight(todayEvents, futureEvents);
+    renderEventCards(all);
   }
 
   if (document.readyState === 'loading') {

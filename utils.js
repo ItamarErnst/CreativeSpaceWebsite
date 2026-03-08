@@ -17,6 +17,21 @@
     return dt.getTime() >= today.getTime();
   }
 
+  function isToday(dt) {
+    const now = new Date();
+    return dt.getFullYear() === now.getFullYear() &&
+           dt.getMonth() === now.getMonth() &&
+           dt.getDate() === now.getDate();
+  }
+
+  function daysUntil(dt) {
+    const now = new Date();
+    now.setHours(0, 0, 0, 0);
+    const target = new Date(dt.getTime());
+    target.setHours(0, 0, 0, 0);
+    return Math.round((target - now) / (1000 * 60 * 60 * 24));
+  }
+
   function formatDate(dt) {
     try {
       return dt.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
@@ -29,12 +44,9 @@
     return (v && String(v).trim()) || 'TBD';
   }
 
-  // removed unused image resolution helpers (moved away from per-event images)
-
   function buildGoogleCalendarUrl(ev) {
     const start = parseISODate(ev.date);
     if (!start) return '#';
-    // All-day event on a single day; end date is next day
     const end = new Date(start.getTime());
     end.setDate(end.getDate() + 1);
     function icsDate(d){
@@ -54,81 +66,36 @@
     return `https://www.google.com/calendar/render?${params.toString()}`;
   }
 
-  // removed unused ICS builder (we link to Google Calendar only)
-
   global.CSUtils = {
     parseISODate,
     isUpcoming,
+    isToday,
+    daysUntil,
     formatDate,
     safe,
     buildGoogleCalendarUrl
   };
 
   // -----------------------------
-  // Motion: load animations & parallax
+  // Motion: load animations (social link stagger)
   // -----------------------------
   function initLoadAnimations() {
     try {
       const prefersReduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-      // Subtitle fade-in
-      const subtitle = document.querySelector('.subtitle');
-      if (subtitle) {
-        // Add more delay before subtitle appears
-        const baseDelay = prefersReduced ? 0 : 800;
-        setTimeout(() => {
-          subtitle.classList.add('is-visible');
-        }, baseDelay);
-      }
-
       // Social links staggered reveal
       const links = Array.from(document.querySelectorAll('.socials a'));
       if (links.length) {
-        // Increase base delay and per-item stagger for a slower cascade
-        const base = prefersReduced ? 0 : 900;
-        const step = prefersReduced ? 0 : 220;
+        const base = prefersReduced ? 0 : 400;
+        const step = prefersReduced ? 0 : 150;
         links.forEach((a, i) => {
           const delay = base + step * i;
           setTimeout(() => a.classList.add('is-visible'), delay);
         });
       }
-
-      // Background parallax pattern (very subtle)
-      if (!prefersReduced) initParallaxBackground();
     } catch (e) {
-      // avoid breaking the page if any of these fail
       console.warn('[Motion] initLoadAnimations failed', e);
     }
-  }
-
-  function initParallaxBackground() {
-    let ticking = false;
-    let lastY = window.scrollY || 0;
-
-    function update() {
-      ticking = false;
-      const y = lastY;
-      // Move background positions at different, slow rates
-      const x1 = (y * 0.03).toFixed(2);
-      const y1 = (y * 0.06).toFixed(2);
-      const x2 = (y * -0.02).toFixed(2);
-      const y2 = (y * 0.04).toFixed(2);
-      document.body.style.backgroundPosition = `${x1}px ${y1}px, ${x2}px ${y2}px`;
-    }
-
-    window.addEventListener('scroll', () => {
-      lastY = window.scrollY || 0;
-      if (!ticking) {
-        ticking = true;
-        requestAnimationFrame(update);
-      }
-    }, { passive: true });
-
-    // initial position
-    requestAnimationFrame(() => {
-      lastY = window.scrollY || 0;
-      update();
-    });
   }
 
   if (document.readyState === 'loading') {
