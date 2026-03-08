@@ -219,9 +219,22 @@
     }
   }
 
+  function startWhenReady() {
+    // Wait for the custom font to load before starting the intro animation
+    if (document.fonts && document.fonts.ready) {
+      Promise.race([
+        document.fonts.ready,
+        new Promise(r => setTimeout(r, 1500)) // fallback max wait
+      ]).then(() => setTimeout(initIntroAnimation, 100));
+    } else {
+      // Browser doesn't support document.fonts — use a small fixed delay
+      setTimeout(initIntroAnimation, 300);
+    }
+  }
+
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initIntroAnimation);
+    document.addEventListener('DOMContentLoaded', startWhenReady);
   } else {
-    initIntroAnimation();
+    startWhenReady();
   }
 })(window);
